@@ -19,30 +19,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // ✅ Read file in memory (NO filesystem)
+    // ✅ Read file in memory
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // ✅ Save dataset entry (no real file path anymore)
+    // ✅ Create dataset entry
     const dataset = await prisma.dataset.create({
       data: {
         userId: session.user.id,
-        filePath: "in-memory", // placeholder
+        filePath: "in-memory",
         fileName: file.name,
       },
     });
 
-    // ✅ ML Service URL (MUST be deployed, not localhost in production)
+    // ✅ ML Service URL
     const mlServiceUrl =
       process.env.ML_SERVICE_URL || "http://localhost:8000";
 
+    // ✅ Prepare request
     const mlFormData = new FormData();
     const blob = new Blob([buffer], { type: file.type });
     mlFormData.append("file", blob, file.name);
 
+    // ✅ Add timeout protection
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+
     const mlResponse = await fetch(`${mlServiceUrl}/analyze`, {
       method: "POST",
       body: mlFormData,
+      signal: controller.signal,
     });
+
+    clearTimeout(timeout);
 
     if (!mlResponse.ok) {
       throw new Error(`ML Service error: ${mlResponse.statusText}`);
@@ -50,8 +58,17 @@ export async function POST(req: NextRequest) {
 
     const mlData = await mlResponse.json();
 
-    // ✅ Store analysis results
+    if (!mlData?.issues || !Array.isArray(mlData.issues)) {
+      throw new Error("Invalid ML response format");
+    }
+
+    // ✅ Store analysis results safely
     for (const issue of mlData.issues) {
+      const numericImpact =
+        typeof issue.impact === "number"
+          ? issue.impact
+          : parseFloat(issue.impact || 0);
+
       await prisma.analysisResult.create({
         data: {
           datasetId: dataset.id,
@@ -59,7 +76,8 @@ export async function POST(req: NextRequest) {
           severity: issue.severity,
           description: issue.description,
           suggestion: issue.suggestion,
-          impactScore: issue.impact,
+          impactScore:
+            issue.impact_display || `+${numericImpact.toFixed(2)}%`,
           rawJson: issue,
         },
       });
@@ -72,6 +90,10 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error("Upload error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+
+    return NextResponse.json(
+      { error: error.message || "Upload failed" },
+      { status: 500 }
+    );
   }
 }
