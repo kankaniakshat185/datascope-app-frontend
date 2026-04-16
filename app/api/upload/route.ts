@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../lib/auth";
 import { prisma } from "../../../lib/auth";
-import fs from "fs";
-import path from "path";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,43 +8,32 @@ export async function POST(req: NextRequest) {
       headers: req.headers,
     });
 
-    // In dev mode, if not authenticated, maybe mock a user or reject
     if (!session?.user) {
-      // For testing without auth, you might want to bypass this.
-      // But let's keep it strict.
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
+
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Save locally
-    const uploadDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
-    const fileName = `${Date.now()}-${file.name}`;
-    const filePath = path.join(uploadDir, fileName);
-
+    // ✅ Read file in memory (NO filesystem)
     const buffer = Buffer.from(await file.arrayBuffer());
-    fs.writeFileSync(filePath, buffer);
 
-    // Save dataset entry to DB
+    // ✅ Save dataset entry (no real file path anymore)
     const dataset = await prisma.dataset.create({
       data: {
         userId: session.user.id,
-        filePath,
+        filePath: "in-memory", // placeholder
         fileName: file.name,
       },
     });
 
-    // Call ML Service (Assuming it exposes POST /analyze endpoint receiving multipart or JSON path)
-    // Docker networking: the ML service is at process.env.ML_SERVICE_URL or http://ml_service:8000
-    const mlServiceUrl = process.env.ML_SERVICE_URL || "http://localhost:8000";
+    // ✅ ML Service URL (MUST be deployed, not localhost in production)
+    const mlServiceUrl =
+      process.env.ML_SERVICE_URL || "http://localhost:8000";
 
     const mlFormData = new FormData();
     const blob = new Blob([buffer], { type: file.type });
@@ -63,7 +50,7 @@ export async function POST(req: NextRequest) {
 
     const mlData = await mlResponse.json();
 
-    // Store analysis results
+    // ✅ Store analysis results
     for (const issue of mlData.issues) {
       await prisma.analysisResult.create({
         data: {
@@ -78,7 +65,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ datasetId: dataset.id, issues: mlData.issues });
+    return NextResponse.json({
+      datasetId: dataset.id,
+      issues: mlData.issues,
+    });
 
   } catch (error: any) {
     console.error("Upload error:", error);
