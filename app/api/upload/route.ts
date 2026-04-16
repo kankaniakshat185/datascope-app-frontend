@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/auth";
+import { auth } from "../../../lib/auth";
+import { prisma } from "../../../lib/auth";
 import fs from "fs";
 import path from "path";
 
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const session = await auth.api.getSession({
       headers: req.headers,
     });
-    
+
     // In dev mode, if not authenticated, maybe mock a user or reject
     if (!session?.user) {
       // For testing without auth, you might want to bypass this.
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
     const fileName = `${Date.now()}-${file.name}`;
     const filePath = path.join(uploadDir, fileName);
-    
+
     const buffer = Buffer.from(await file.arrayBuffer());
     fs.writeFileSync(filePath, buffer);
 
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     // Call ML Service (Assuming it exposes POST /analyze endpoint receiving multipart or JSON path)
     // Docker networking: the ML service is at process.env.ML_SERVICE_URL or http://ml_service:8000
     const mlServiceUrl = process.env.ML_SERVICE_URL || "http://localhost:8000";
-    
+
     const mlFormData = new FormData();
     const blob = new Blob([buffer], { type: file.type });
     mlFormData.append("file", blob, file.name);

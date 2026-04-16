@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "../lib/auth-client";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -43,7 +43,7 @@ export default function Home() {
       method: "POST",
       body: formData,
     });
-    
+
     setUploading(false);
     if (res.ok) {
       const data = await res.json();
@@ -58,25 +58,25 @@ export default function Home() {
       <div className="flex justify-between items-center mb-10 max-w-5xl mx-auto">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">Dataset Debugger</h1>
         <div className="flex items-center gap-4">
-            <span className="text-sm text-neutral-400">{session.user.email}</span>
-            <button className="text-sm text-neutral-400 hover:text-white transition-colors" onClick={() => authClient.signOut()}>Sign Out</button>
+          <span className="text-sm text-neutral-400">{session.user.email}</span>
+          <button className="text-sm text-neutral-400 hover:text-white transition-colors" onClick={() => authClient.signOut()}>Sign Out</button>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto mt-32 p-10 border border-neutral-800 rounded-3xl bg-neutral-900/40 shadow-2xl backdrop-blur-xl">
         <h2 className="text-2xl font-semibold mb-2">Analyze a New Dataset</h2>
         <p className="text-neutral-400 mb-8 leading-relaxed">Find out exactly why your model sucks. Upload a CSV to get an instant analysis on data quality and machine learning metrics with quantified improvements.</p>
-        
+
         <div className="flex flex-col gap-6">
           <div className="border border-dashed border-neutral-700 p-8 rounded-xl bg-neutral-900/50 flex justify-center">
-            <input 
-                type="file" 
-                accept=".csv"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="block text-sm text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="block text-sm text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
             />
           </div>
-          <button 
+          <button
             disabled={!file || uploading}
             onClick={handleUpload}
             className="w-full bg-gradient-to-r w-full from-emerald-600 to-teal-600 text-white p-3.5 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:from-emerald-500 hover:to-teal-500 transition-all shadow-lg"

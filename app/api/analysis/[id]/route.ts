@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/auth";
+import { auth } from "../../../../lib/auth";
+import { prisma } from "../../../../lib/auth";
 
 export async function GET(
   req: NextRequest,
@@ -12,7 +12,7 @@ export async function GET(
     });
 
     if (!session?.user) {
-       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = params;
@@ -32,7 +32,7 @@ export async function GET(
 
     // Ensure user owns this dataset
     if (dataset.userId !== session.user.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     return NextResponse.json({ dataset });
