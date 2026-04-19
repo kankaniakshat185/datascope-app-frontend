@@ -11,6 +11,14 @@ type Issue = {
   description: string;
   suggestion: string;
   impactScore: string;
+  rawJson?: {
+    baseline_score?: number;
+    after_score?: number;
+    metric?: string;
+    confidence_score?: number;
+    eval_metrics?: any;
+    [key: string]: any;
+  };
 };
 
 type DatasetResult = {
@@ -105,8 +113,8 @@ export default function ResultsPage() {
                 </div>
 
                 {/* Right side: Impact Metric */}
-                <div className="flex items-center gap-4 bg-neutral-900 border border-neutral-700/50 p-4 rounded-xl shadow-inner min-w-[200px] justify-center text-center">
-                    <div>
+                <div className="flex flex-col gap-3 bg-neutral-900 border border-neutral-700/50 p-4 rounded-xl shadow-inner min-w-[280px]">
+                    <div className={`text-center ${issue.rawJson?.metric ? 'pb-3 border-b border-neutral-800' : ''}`}>
                         <div className="flex items-center justify-center gap-1.5 mb-1 text-emerald-400">
                             <Activity className="w-4 h-4" />
                             <span className="text-xs font-semibold tracking-wider uppercase">Projected Impact</span>
@@ -114,7 +122,25 @@ export default function ResultsPage() {
                         <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
                             {issue.impactScore}
                         </div>
+                        {issue.rawJson?.confidence_score !== undefined && (
+                            <div className="text-[10px] text-neutral-500 mt-1 uppercase tracking-widest">
+                                Confidence: {issue.rawJson.confidence_score.toFixed(1)}%
+                            </div>
+                        )}
                     </div>
+                    {issue.rawJson?.metric && issue.rawJson?.baseline_score !== undefined && issue.rawJson?.after_score !== undefined && (
+                        <div className="flex justify-between items-center text-sm px-2">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-neutral-500 uppercase tracking-wider">{issue.rawJson.metric} (Before)</span>
+                                <span className="font-mono text-neutral-300">{Number(issue.rawJson.baseline_score).toFixed(3)}</span>
+                            </div>
+                            <div className="text-neutral-600">→</div>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[10px] text-emerald-500/70 uppercase tracking-wider">{issue.rawJson.metric} (After)</span>
+                                <span className="font-mono text-emerald-400">{Number(issue.rawJson.after_score).toFixed(3)}</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
             </div>
