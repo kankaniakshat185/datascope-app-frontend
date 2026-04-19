@@ -50,8 +50,8 @@ export default function ResultsPage() {
       });
   }, [params.id]);
 
-  if (loading) return <div className="min-h-screen bg-neutral-950 flex items-center justify-center text-white">Loading analysis results...</div>;
-  if (!data) return <div className="min-h-screen bg-neutral-950 flex items-center justify-center text-white">Analysis not found. Make sure you are logged in.</div>;
+  if (loading) return <div className="min-h-screen bg-neutral-400 flex items-center justify-center text-white">Loading analysis results...</div>;
+  if (!data) return <div className="min-h-screen bg-neutral-400 flex items-center justify-center text-white">Analysis not found. Make sure you are logged in.</div>;
 
   const severityIcon = {
     HIGH: <AlertCircle className="w-6 h-6 text-red-500" />,
@@ -62,22 +62,22 @@ export default function ResultsPage() {
   const severityBg = {
     HIGH: "bg-red-500/10 border-red-500/20",
     MEDIUM: "bg-yellow-500/10 border-yellow-500/20",
-    LOW: "bg-blue-500/10 border-blue-500/20",
+    LOW: "bg-green-500/10 border-green-500/20",
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white font-[family-name:var(--font-geist-sans)]">
+    <div className="min-h-screen bg-neutral-100 text-black font-[family-name:var(--font-geist-sans)]">
       {/* Header */}
-      <header className="border-b border-neutral-800 bg-neutral-900/50 backdrop-blur-md sticky top-0 z-10">
+      <header className="border-b-4 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => router.push("/")} className="text-neutral-400 hover:text-white transition">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">Dataset Debugger</h1>
+            <h1 className="text-3xl font-bold text-black text-center font-playfair">Dataset Debugger</h1>
           </div>
-          <div className="text-sm text-neutral-400">
-            Analyzing: <span className="text-white font-medium">{data.fileName}</span>
+          <div className="text-md text-black">
+            Analyzing: <span className="">{data.fileName}</span>
           </div>
         </div>
       </header>
@@ -85,9 +85,9 @@ export default function ResultsPage() {
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-6 py-12">
         <div className="mb-10 text-center">
-            <h2 className="text-4xl font-extrabold mb-4 tracking-tight">Your dataset is why your model sucks.</h2>
-            <p className="text-lg text-neutral-400 max-w-2xl mx-auto">
-                We found <span className="text-white font-bold">{data.analysisResults.length}</span> critical issues. 
+            <h2 className="text-4xl font-extrabold mb-4 tracking-tight">Your dataset determines your model’s performance.</h2>
+            <p className="text-lg max-w-2xl mx-auto">
+                We found <span className="text-red-500 font-bold">{data.analysisResults.length}</span> critical issues. 
                 Applying the suggested fixes will demonstrably improve your baseline model.
             </p>
         </div>
@@ -107,13 +107,13 @@ export default function ResultsPage() {
                                 {issue.severity} PRIORITY
                             </span>
                         </div>
-                        <h3 className="text-xl font-semibold text-white mb-1">{issue.description}</h3>
-                        <p className="text-neutral-400 text-sm">→ Fix: <span className="text-neutral-200 font-medium">{issue.suggestion}</span></p>
+                        <h3 className="text-xl font-semibold mb-1">{issue.description}</h3>
+                        <p className="text-sm">→ Fix: <span className=" font-medium">{issue.suggestion}</span></p>
                     </div>
                 </div>
 
                 {/* Right side: Impact Metric */}
-                <div className="flex flex-col gap-3 bg-neutral-900 border border-neutral-700/50 p-4 rounded-xl shadow-inner min-w-[280px]">
+                <div className="flex flex-col gap-3 bg-white border p-4 rounded-xl shadow-inner min-w-[280px]">
                     <div className={`text-center ${issue.rawJson?.metric ? 'pb-3 border-b border-neutral-800' : ''}`}>
                         <div className="flex items-center justify-center gap-1.5 mb-1 text-emerald-400">
                             <Activity className="w-4 h-4" />
