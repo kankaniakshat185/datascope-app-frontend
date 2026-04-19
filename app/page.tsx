@@ -19,7 +19,7 @@ export default function Home() {
     return (
       <div className="flex flex-col items-center justify-center text-black min-h-screen bg-neutral-100 text-white">
         <div className="p-8 bg-neutral-200 rounded-2xl shadow-2xl w-96 space-y-4">
-          <h1 className="text-4xl font-bold text-black text-center font-playfair">Dataset Debugger</h1>
+          <h1 className="text-4xl font-bold text-black text-center font-playfair">DataScope</h1>
           <p className="text-sm text-black">Login or Signup to continue</p>
           <input className="w-full p-2.5 rounded-lg bg-neutral-300 text-black outline-none focus:border-blue-500" placeholder="Name (for signup)" value={name} onChange={e => setName(e.target.value)} />
           <input className="w-full p-2.5 rounded-lg bg-neutral-300 text-black outline-none focus:border-blue-500" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
@@ -60,7 +60,7 @@ export default function Home() {
           <span className="text-sm">{session.user.email}</span>
           <button className="text-sm hover:text-white transition-colors" onClick={() => authClient.signOut()}>Sign Out</button>
         </div>
-        <h1 className="text-4xl font-bold text-black text-center font-playfair">Dataset Debugger</h1>
+        <h1 className="text-4xl font-bold text-black text-center font-playfair">DataScope</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm">{session.user.email}</span>
           <button className="text-sm hover:text-white transition-colors" onClick={() => authClient.signOut()}>Sign Out</button>
