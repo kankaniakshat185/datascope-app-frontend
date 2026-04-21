@@ -296,7 +296,7 @@ export default function ResultsPage() {
             <h2 className="text-4xl font-extrabold mb-4 tracking-tight">Your dataset determines your model’s performance.</h2>
             <p className="text-lg max-w-2xl mx-auto">
                 We found <span className="text-red-500 font-bold">{data.analysisResults.length}</span> critical issues. 
-                Applying the suggested fixes will demonstrably improve your baseline model. Click on the suggested issues to know more about them!
+                Applying the suggested fixes will demonstrably improve your baseline model. Click on the suggested issues to know more!
             </p>
         </div>
 
