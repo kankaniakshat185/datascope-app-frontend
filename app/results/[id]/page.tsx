@@ -131,6 +131,60 @@ const GLOSSARY = [
     term: "Evaluation Metrics",
     url: "https://www.geeksforgeeks.org/machine-learning-model-evaluation/",
     tooltip: "Measures used to assess a model's performance."
+  },
+  {
+    regex: /\b(multicollinearity|collinear|collinearity)\b/i,
+    term: "Multicollinearity",
+    url: "https://www.geeksforgeeks.org/multicollinearity-in-data/",
+    tooltip: "When independent variables in a model are highly correlated with each other."
+  },
+  {
+    regex: /\b(dropping columns|drop columns|drop feature|dropping feature)\b/i,
+    term: "Dropping Columns",
+    url: "https://www.geeksforgeeks.org/how-to-drop-one-or-multiple-columns-in-pandas-dataframe/",
+    tooltip: "Removing unnecessary, redundant, or highly missing columns to improve model efficiency."
+  },
+  {
+    regex: /\b(uniqueness|unique values|cardinality)\b/i,
+    term: "Uniqueness / Cardinality",
+    url: "https://www.geeksforgeeks.org/python-pandas-series-nunique/",
+    tooltip: "The count of distinct values. High cardinality can lead to overfitting or memory issues."
+  },
+  {
+    regex: /\b(vif|variance inflation factor)\b/i,
+    term: "Variance Inflation Factor (VIF)",
+    url: "https://www.geeksforgeeks.org/detecting-multicollinearity-with-vif-python/",
+    tooltip: "A measure used to detect the severity of multicollinearity in regression analysis."
+  },
+  {
+    regex: /\b(correlation|correlation matrix|pearson)\b/i,
+    term: "Correlation Matrix",
+    url: "https://www.geeksforgeeks.org/create-a-correlation-matrix-using-pandas/",
+    tooltip: "A table showing correlation coefficients between variables."
+  },
+  {
+    regex: /\b(imbalance|imbalanced data|class imbalance|smote)\b/i,
+    term: "Class Imbalance",
+    url: "https://www.geeksforgeeks.org/ml-handling-imbalanced-data-with-smote-and-near-miss-algorithm-in-python/",
+    tooltip: "When the distribution of target classes is highly skewed, which can bias the model."
+  },
+  {
+    regex: /\b(skewness|skewed|high skew)\b/i,
+    term: "Skewness",
+    url: "https://www.geeksforgeeks.org/how-to-calculate-skewness-and-kurtosis-in-python/",
+    tooltip: "A measure of the asymmetry of the probability distribution."
+  },
+  {
+    regex: /\b(target leakage|data leakage)\b/i,
+    term: "Data Leakage",
+    url: "https://www.geeksforgeeks.org/data-leakage-in-machine-learning/",
+    tooltip: "When information from outside the training dataset is used to create the model."
+  },
+  {
+    regex: /\b(cross-validation|cross validation|cv)\b/i,
+    term: "Cross-Validation",
+    url: "https://www.geeksforgeeks.org/cross-validation-machine-learning/",
+    tooltip: "A resampling procedure used to evaluate machine learning models on a limited data sample."
   }
 ];
 
