@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity } from "lucide-react";
 
@@ -134,7 +134,7 @@ const GLOSSARY = [
   }
 ];
 
-const GlossaryTerm = ({ term, url, tooltip, children }: { term: string, url: string, tooltip: string, children: React.ReactNode }) => {
+const GlossaryTerm = ({ term, url, tooltip, children }: { term: string, url: string, tooltip: string, children: ReactNode }) => {
     return (
         <span className="relative group inline-block">
             <a 
@@ -157,7 +157,7 @@ const GlossaryTerm = ({ term, url, tooltip, children }: { term: string, url: str
 };
 
 const RichText = ({ content }: { content: string }) => {
-    let parts: (string | JSX.Element)[] = [content];
+    let parts: (string | ReactNode)[] = [content];
 
     GLOSSARY.forEach((item, index) => {
         parts = parts.flatMap((part, i) => {
