@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dataset Debugger",
+  title: "DataScope",
   description: "Debug your ML datasets",
 };
 
