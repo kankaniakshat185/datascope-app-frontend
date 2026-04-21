@@ -71,6 +71,117 @@ const MetricChart = ({ baseline, after, metric }: { baseline: number; after: num
     );
 };
 
+const GLOSSARY = [
+  {
+    regex: /\b(rmse|root mean square error)\b/i,
+    term: "RMSE",
+    url: "https://www.geeksforgeeks.org/root-mean-square-error-in-machine-learning/",
+    tooltip: "Root Mean Square Error: evaluates the standard deviation of the residuals."
+  },
+  {
+    regex: /\b(iqr|interquartile range)\b/i,
+    term: "IQR",
+    url: "https://www.geeksforgeeks.org/interquartile-range-to-detect-outliers-in-data/",
+    tooltip: "Interquartile Range: robust statistical measure used to detect outliers."
+  },
+  {
+    regex: /\b(z-score|z\s?score)\b/i,
+    term: "Z-Score",
+    url: "https://www.geeksforgeeks.org/z-score-for-outlier-detection-python/",
+    tooltip: "Z-Score indicates how many standard deviations an element is from the mean."
+  },
+  {
+    regex: /\b(missing value|missing values|imputation|impute)\b/i,
+    term: "Handling Missing Data",
+    url: "https://www.geeksforgeeks.org/working-with-missing-data-in-pandas/",
+    tooltip: "Techniques to handle or fill blank data points in your dataset."
+  },
+  {
+    regex: /\b(outlier|outliers)\b/i,
+    term: "Outliers",
+    url: "https://www.geeksforgeeks.org/detect-and-remove-the-outliers-using-python/",
+    tooltip: "Data points that differ significantly from other observations."
+  },
+  {
+    regex: /\b(one-hot encoding|one hot encoding|ohe)\b/i,
+    term: "One-Hot Encoding",
+    url: "https://www.geeksforgeeks.org/ml-one-hot-encoding-of-datasets-in-python/",
+    tooltip: "Converting categorical data into binary vectors."
+  },
+  {
+    regex: /\b(label encoding)\b/i,
+    term: "Label Encoding",
+    url: "https://www.geeksforgeeks.org/ml-label-encoding-of-datasets-in-python/",
+    tooltip: "Converting each categorical value to a unique integer."
+  },
+  {
+    regex: /\b(standard scaling|standardization|standard scaler)\b/i,
+    term: "Standardization",
+    url: "https://www.geeksforgeeks.org/standardscaler-minmaxscaler-and-robustscaler-techniques-ml/",
+    tooltip: "Transforming data to have mean=0 and variance=1."
+  },
+  {
+    regex: /\b(min-max scaling|min max scaler|normalization)\b/i,
+    term: "Normalization",
+    url: "https://www.geeksforgeeks.org/data-normalization-in-data-mining/",
+    tooltip: "Scaling data to a specific range, usually 0 to 1."
+  },
+  {
+    regex: /\b(accuracy|r-squared|r2|mae|mse|mean absolute error|mean squared error)\b/i,
+    term: "Evaluation Metrics",
+    url: "https://www.geeksforgeeks.org/machine-learning-model-evaluation/",
+    tooltip: "Measures used to assess a model's performance."
+  }
+];
+
+const GlossaryTerm = ({ term, url, tooltip, children }: { term: string, url: string, tooltip: string, children: React.ReactNode }) => {
+    return (
+        <span className="relative group inline-block">
+            <a 
+                href={url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="underline decoration-dashed decoration-blue-400 text-blue-600 font-bold cursor-pointer transition-colors hover:text-blue-500 hover:decoration-blue-500 mx-0.5"
+            >
+                {children}
+            </a>
+            <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[250px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">
+                <span className="block bg-neutral-900 text-white text-xs p-2.5 rounded-xl shadow-xl shadow-blue-900/10 text-center relative border border-neutral-700">
+                    <span className="block font-bold text-blue-300 mb-1">{term}</span>
+                    <span className="block text-neutral-300 whitespace-normal leading-relaxed">{tooltip}</span>
+                    <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-neutral-900"></span>
+                </span>
+            </span>
+        </span>
+    );
+};
+
+const RichText = ({ content }: { content: string }) => {
+    let parts: (string | JSX.Element)[] = [content];
+
+    GLOSSARY.forEach((item, index) => {
+        parts = parts.flatMap((part, i) => {
+            if (typeof part !== 'string') return [part];
+            
+            const words = part.split(item.regex);
+            if (words.length === 1) return [part];
+
+            return words.map((word, wIdx) => {
+                if (wIdx % 2 === 1) { 
+                    return (
+                        <GlossaryTerm key={`${index}-${i}-${wIdx}`} term={item.term} url={item.url} tooltip={item.tooltip}>
+                            {word}
+                        </GlossaryTerm>
+                    );
+                }
+                return word;
+            });
+        });
+    });
+
+    return <>{parts.map((part, i) => <span key={i}>{part}</span>)}</>;
+};
+
 export default function ResultsPage() {
   const params = useParams();
   const router = useRouter();
@@ -150,8 +261,8 @@ export default function ResultsPage() {
                                 {issue.severity} PRIORITY
                             </span>
                         </div>
-                        <h3 className="text-xl font-semibold mb-1">{issue.description}</h3>
-                        <p className="text-sm">→ Fix: <span className=" font-medium">{issue.suggestion}</span></p>
+                        <h3 className="text-xl font-semibold mb-1"><RichText content={issue.description} /></h3>
+                        <p className="text-sm">→ Fix: <span className=" font-medium"><RichText content={issue.suggestion} /></span></p>
                     </div>
                 </div>
 
