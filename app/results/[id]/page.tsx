@@ -28,6 +28,49 @@ type DatasetResult = {
   analysisResults: Issue[];
 };
 
+const MetricChart = ({ baseline, after, metric }: { baseline: number; after: number; metric: string }) => {
+    const safeBaseline = Math.max(0, baseline);
+    const safeAfter = Math.max(0, after);
+    const maxVal = Math.max(safeBaseline, safeAfter, 0.001) * 1.05;
+    
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
+    const baselineWidth = mounted ? `${(safeBaseline / maxVal) * 100}%` : "0%";
+    const afterWidth = mounted ? `${(safeAfter / maxVal) * 100}%` : "0%";
+
+    return (
+        <div className="mt-2 flex flex-col gap-3 py-2">
+             <div className="flex flex-col gap-1.5">
+                 <div className="flex justify-between items-end">
+                     <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Before ({metric})</span>
+                     <span className="font-mono text-sm font-semibold text-neutral-700">{baseline.toFixed(3)}</span>
+                 </div>
+                 <div className="w-full bg-neutral-100 rounded-full h-2.5 shadow-inner overflow-hidden border border-neutral-200">
+                     <div 
+                        className="bg-neutral-400 h-full rounded-full transition-all duration-1000 ease-out" 
+                        style={{ width: baselineWidth }}
+                     />
+                 </div>
+             </div>
+             <div className="flex flex-col gap-1.5">
+                 <div className="flex justify-between items-end">
+                     <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">After ({metric})</span>
+                     <span className="font-mono text-sm font-bold text-emerald-600">{after.toFixed(3)}</span>
+                 </div>
+                 <div className="w-full bg-neutral-100 rounded-full h-2.5 shadow-inner overflow-hidden border border-emerald-100">
+                     <div 
+                        className="bg-gradient-to-r from-emerald-400 to-teal-500 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(52,211,153,0.3)] relative overflow-hidden" 
+                        style={{ width: afterWidth }}
+                     >
+                        <div className="absolute top-0 right-0 bottom-0 left-0 bg-gradient-to-r from-transparent to-white/20 animate-pulse"></div>
+                     </div>
+                 </div>
+             </div>
+        </div>
+    );
+};
+
 export default function ResultsPage() {
   const params = useParams();
   const router = useRouter();
@@ -114,7 +157,7 @@ export default function ResultsPage() {
 
                 {/* Right side: Impact Metric */}
                 <div className="flex flex-col gap-3 bg-white border p-4 rounded-xl shadow-inner min-w-[280px]">
-                    <div className={`text-center ${issue.rawJson?.metric ? 'pb-3 border-b border-neutral-800' : ''}`}>
+                    <div className={`text-center ${issue.rawJson?.metric ? 'pb-3 border-b border-neutral-200' : ''}`}>
                         <div className="flex items-center justify-center gap-1.5 mb-1 text-emerald-400">
                             <Activity className="w-4 h-4" />
                             <span className="text-xs font-semibold tracking-wider uppercase">Projected Impact</span>
@@ -129,17 +172,7 @@ export default function ResultsPage() {
                         )}
                     </div>
                     {issue.rawJson?.metric && issue.rawJson?.baseline_score !== undefined && issue.rawJson?.after_score !== undefined && (
-                        <div className="flex justify-between items-center text-sm px-2">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] text-neutral-500 uppercase tracking-wider">{issue.rawJson.metric} (Before)</span>
-                                <span className="font-mono text-neutral-300">{Number(issue.rawJson.baseline_score).toFixed(3)}</span>
-                            </div>
-                            <div className="text-neutral-600">→</div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-[10px] text-emerald-500/70 uppercase tracking-wider">{issue.rawJson.metric} (After)</span>
-                                <span className="font-mono text-emerald-400">{Number(issue.rawJson.after_score).toFixed(3)}</span>
-                            </div>
-                        </div>
+                        <MetricChart baseline={issue.rawJson.baseline_score} after={issue.rawJson.after_score} metric={issue.rawJson.metric} />
                     )}
                 </div>
 
