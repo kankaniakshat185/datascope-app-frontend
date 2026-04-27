@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { authClient } from "../lib/auth-client";
 import { useRouter } from "next/navigation";
+import { Settings2, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function Home() {
   const { data: session, isPending } = authClient.useSession();
@@ -11,6 +12,7 @@ export default function Home() {
   const [name, setName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [rulesJson, setRulesJson] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [uploading, setUploading] = useState(false);
   const router = useRouter();
 
@@ -87,19 +89,34 @@ export default function Home() {
           </div>
           
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-neutral-700 flex justify-between items-center">
-                Custom Rules (Optional)
-                <span className="text-xs font-normal text-neutral-500 bg-neutral-200 px-2 py-0.5 rounded-full">JSON Format</span>
-            </label>
-            <p className="text-xs text-neutral-500">
-                E.g. <code>[{"{"}"column": "Age", "type": "min", "value": 0{"}"}]</code> to enforce business logic.
-            </p>
-            <textarea
-               value={rulesJson}
-               onChange={(e) => setRulesJson(e.target.value)}
-               placeholder={'[\n  { "column": "Age", "type": "min", "value": 0 },\n  { "column": "Status", "type": "in", "value": ["Active", "Inactive"] }\n]'}
-               className="w-full h-32 p-3 text-sm font-mono text-neutral-800 bg-neutral-100 rounded-xl border border-neutral-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none transition-all placeholder:text-neutral-400"
-            />
+            <button 
+                onClick={() => setShowAdvanced(!showAdvanced)} 
+                className="flex items-center justify-between w-full py-3 px-4 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-xl transition-all"
+            >
+                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-700">
+                    <Settings2 className="w-4 h-4" />
+                    Advanced Settings
+                </div>
+                {showAdvanced ? <ChevronUp className="w-4 h-4 text-neutral-500" /> : <ChevronDown className="w-4 h-4 text-neutral-500" />}
+            </button>
+            
+            {showAdvanced && (
+                <div className="mt-2 p-5 bg-neutral-50 border border-neutral-200 rounded-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="text-sm font-semibold text-neutral-700 flex justify-between items-center">
+                        Custom Rules
+                        <span className="text-xs font-normal text-neutral-500 bg-neutral-200 px-2 py-0.5 rounded-full">JSON Format</span>
+                    </label>
+                    <p className="text-xs text-neutral-500">
+                        E.g. <code>[{"{"}"column": "Age", "type": "min", "value": 0{"}"}]</code> to enforce business logic.
+                    </p>
+                    <textarea
+                       value={rulesJson}
+                       onChange={(e) => setRulesJson(e.target.value)}
+                       placeholder={'[\n  { "column": "Age", "type": "min", "value": 0 },\n  { "column": "Status", "type": "in", "value": ["Active", "Inactive"] }\n]'}
+                       className="w-full h-32 p-3 text-sm font-mono text-neutral-800 bg-white rounded-xl border border-neutral-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none transition-all placeholder:text-neutral-400 shadow-inner"
+                    />
+                </div>
+            )}
           </div>
 
           <button
