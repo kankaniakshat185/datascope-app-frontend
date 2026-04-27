@@ -2,7 +2,7 @@
 
 import { useEffect, useState, ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity } from "lucide-react";
+import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database } from "lucide-react";
 
 type Issue = {
   id: string;
@@ -261,6 +261,9 @@ export default function ResultsPage() {
   if (loading) return <div className="min-h-screen bg-neutral-400 flex items-center justify-center text-white">Loading analysis results...</div>;
   if (!data) return <div className="min-h-screen bg-neutral-400 flex items-center justify-center text-white">Analysis not found. Make sure you are logged in.</div>;
 
+  const dataDictResult = data.analysisResults.find((i: Issue) => i.issueType === "DATA_DICTIONARY");
+  const actualIssues = data.analysisResults.filter((i: Issue) => i.issueType !== "DATA_DICTIONARY");
+
   const severityIcon = {
     HIGH: <AlertCircle className="w-6 h-6 text-red-500" />,
     MEDIUM: <AlertTriangle className="w-6 h-6 text-yellow-500" />,
@@ -295,13 +298,67 @@ export default function ResultsPage() {
         <div className="mb-10 text-center">
             <h2 className="text-4xl font-extrabold mb-4 tracking-tight">Your dataset determines your model’s performance.</h2>
             <p className="text-lg max-w-2xl mx-auto">
-                We found <span className="text-red-500 font-bold">{data.analysisResults.length}</span> critical issues. 
+                We found <span className="text-red-500 font-bold">{actualIssues.length}</span> critical issues. 
                 Applying the suggested fixes will demonstrably improve your baseline model. Click on the suggested issues for implementation guides!
             </p>
         </div>
 
+        {dataDictResult && dataDictResult.rawJson && (
+          <div className="mb-12 bg-white rounded-3xl p-8 border border-neutral-200 shadow-xl overflow-hidden">
+             <div className="flex items-center gap-3 mb-6">
+                <Database className="w-8 h-8 text-blue-500" />
+                <h3 className="text-2xl font-bold">Data Dictionary</h3>
+             </div>
+             <div className="flex gap-4 mb-6">
+                <div className="bg-blue-50 text-blue-800 px-4 py-2 rounded-xl border border-blue-200 shadow-sm">
+                   <span className="font-bold">{dataDictResult.rawJson.total_rows}</span> Rows
+                </div>
+                <div className="bg-purple-50 text-purple-800 px-4 py-2 rounded-xl border border-purple-200 shadow-sm">
+                   <span className="font-bold">{dataDictResult.rawJson.total_columns}</span> Columns
+                </div>
+             </div>
+             
+             <div className="overflow-x-auto rounded-xl border border-neutral-200">
+                <table className="w-full text-left border-collapse">
+                   <thead>
+                      <tr className="border-b-2 border-neutral-200 bg-neutral-50">
+                         <th className="py-3 px-4 font-semibold text-sm text-neutral-600">Column Name</th>
+                         <th className="py-3 px-4 font-semibold text-sm text-neutral-600">Data Type</th>
+                         <th className="py-3 px-4 font-semibold text-sm text-neutral-600">Missing</th>
+                         <th className="py-3 px-4 font-semibold text-sm text-neutral-600">Unique</th>
+                         <th className="py-3 px-4 font-semibold text-sm text-neutral-600">Sample / Stats</th>
+                      </tr>
+                   </thead>
+                   <tbody>
+                      {dataDictResult.rawJson.columns?.map((col: any, idx: number) => (
+                         <tr key={idx} className="border-b border-neutral-100 hover:bg-neutral-50 transition">
+                            <td className="py-3 px-4 font-mono text-sm font-medium">{col.column_name}</td>
+                            <td className="py-3 px-4">
+                               <span className="text-xs px-2 py-1 bg-neutral-200 rounded-md text-neutral-700 font-medium">{col.data_type}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                               {col.missing_percentage > 0 ? (
+                                   <span className="text-red-500 text-sm font-medium bg-red-50 px-2 py-1 rounded-md">{col.missing_percentage}% ({col.missing_count})</span>
+                               ) : (
+                                   <span className="text-neutral-400 text-sm px-2 py-1">0%</span>
+                               )}
+                            </td>
+                            <td className="py-3 px-4 text-sm font-medium">{col.unique_count}</td>
+                            <td className="py-3 px-4 text-xs text-neutral-500 max-w-[200px] truncate">
+                               {col.sample_values ? `[${col.sample_values.join(", ")}]` : ""}
+                               {col.mean && <span className="ml-2 text-emerald-600 font-medium">Mean: {col.mean.toFixed(2)}</span>}
+                               {col.top_value && <span className="ml-2 text-blue-600 font-medium">Mode: {col.top_value}</span>}
+                            </td>
+                         </tr>
+                      ))}
+                   </tbody>
+                </table>
+             </div>
+          </div>
+        )}
+
         <div className="space-y-6">
-          {data.analysisResults.map((issue) => (
+          {actualIssues.map((issue) => (
             <div key={issue.id} className={`p-6 rounded-2xl border ${severityBg[issue.severity]} backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition hover:-translate-y-1 hover:shadow-xl`}>
                 
                 {/* Left side: Icon & Details */}
@@ -344,7 +401,7 @@ export default function ResultsPage() {
             </div>
           ))}
 
-          {data.analysisResults.length === 0 && (
+          {actualIssues.length === 0 && (
              <div className="text-center py-20 border border-neutral-800 rounded-3xl bg-neutral-900/30">
                 <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
                 <h3 className="text-2xl font-bold">Your dataset looks great!</h3>

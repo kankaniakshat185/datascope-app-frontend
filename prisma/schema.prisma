@@ -74,6 +74,7 @@ model Dataset {
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   filePath        String
   fileName        String
+  dataDictionary  Json?
   uploadedAt      DateTime         @default(now())
   analysisResults AnalysisResult[]
 
