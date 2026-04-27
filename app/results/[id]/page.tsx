@@ -242,7 +242,7 @@ export default function ResultsPage() {
   const router = useRouter();
   const [data, setData] = useState<DatasetResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'issues' | 'dictionary' | 'eda'>('issues');
+  const [activeTab, setActiveTab] = useState<'issues' | 'dictionary' | 'eda' | 'remediation'>('issues');
   const [cleaning, setCleaning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -346,14 +346,6 @@ export default function ResultsPage() {
             
             <div className="flex justify-center mt-4">
                 <input type="file" ref={fileInputRef} className="hidden" onChange={handleClean} accept=".csv,.xlsx,.xls,.json,.parquet" />
-                <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={cleaning}
-                    className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-8 py-3.5 rounded-full font-bold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    <Sparkles className="w-5 h-5" />
-                    {cleaning ? "Cleaning Dataset..." : "Auto-Clean Dataset"}
-                </button>
             </div>
         </div>
 
@@ -384,6 +376,15 @@ export default function ResultsPage() {
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 EDA Dashboard
+              </div>
+            </button>
+            <button 
+              onClick={() => setActiveTab('remediation')}
+              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'remediation' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Auto-Clean
               </div>
             </button>
           </div>
@@ -505,6 +506,63 @@ export default function ResultsPage() {
                    </div>
                 </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'remediation' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-gradient-to-br from-indigo-900 to-black rounded-3xl p-10 shadow-2xl relative overflow-hidden border border-indigo-500/30">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+                <div className="relative z-10 text-white max-w-3xl mx-auto text-center">
+                    <Sparkles className="w-16 h-16 text-indigo-400 mx-auto mb-6" />
+                    <h3 className="text-3xl font-bold mb-4">One-Click Remediation</h3>
+                    <p className="text-neutral-300 text-lg mb-8">
+                        The DataScope Engine will automatically clean your dataset based on the issues found during analysis. 
+                        Here is exactly what we will do:
+                    </p>
+                    
+                    <div className="text-left bg-black/40 p-6 rounded-2xl mb-10 space-y-4 border border-white/10">
+                        <div className="flex gap-4 items-start">
+                            <CheckCircle className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="font-bold text-white text-lg">1. Drop Heavy Missing Values</h4>
+                                <p className="text-sm text-neutral-400">Any column missing more than 50% of its data will be completely dropped to prevent noise.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4 items-start">
+                            <CheckCircle className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="font-bold text-white text-lg">2. Impute Remaining NaNs</h4>
+                                <p className="text-sm text-neutral-400">Missing numeric values will be filled with the column's <span className="font-mono text-xs bg-white/10 px-1 rounded">Median</span>. Missing text values will be filled with the column's <span className="font-mono text-xs bg-white/10 px-1 rounded">Mode</span>.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4 items-start">
+                            <CheckCircle className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="font-bold text-white text-lg">3. Cap Extreme Outliers</h4>
+                                <p className="text-sm text-neutral-400">We will statistically clip numeric columns at the 1st and 99th percentiles to destroy extreme noise without losing genuine data points.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4 items-start">
+                            <CheckCircle className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="font-bold text-white text-lg">4. Remove Duplicates</h4>
+                                <p className="text-sm text-neutral-400">Exact duplicate rows will be collapsed to ensure your model doesn't overfit on redundant data.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={cleaning}
+                        className="inline-flex items-center gap-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-10 py-4 rounded-full font-bold text-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Sparkles className="w-6 h-6" />
+                        {cleaning ? "Cleaning Dataset..." : "Select File & Clean"}
+                    </button>
+                    <p className="text-xs text-neutral-500 mt-4">We do not store your dataset. Please select the file again to clean it securely.</p>
+                </div>
+            </div>
           </div>
         )}
 
