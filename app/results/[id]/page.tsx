@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useState, ReactNode, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3 } from "lucide-react";
+import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 type Issue = {
@@ -243,6 +243,43 @@ export default function ResultsPage() {
   const [data, setData] = useState<DatasetResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'issues' | 'dictionary' | 'eda'>('issues');
+  const [cleaning, setCleaning] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleClean = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      setCleaning(true);
+      try {
+          const mlServiceUrl = process.env.NEXT_PUBLIC_ML_SERVICE_URL || "http://localhost:8000";
+          const formData = new FormData();
+          formData.append("file", file);
+          
+          const res = await fetch(`${mlServiceUrl}/clean`, {
+              method: "POST",
+              body: formData,
+          });
+          
+          if (!res.ok) throw new Error("Cleaning failed");
+          
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `cleaned_${file.name.endsWith('.csv') ? file.name : file.name.split('.')[0] + '.csv'}`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+      } catch (err) {
+          console.error(err);
+          alert("Failed to clean dataset. Please make sure the ML service is running.");
+      } finally {
+          setCleaning(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+  };
 
   useEffect(() => {
     fetch(`/api/analysis/${params.id}`)
@@ -303,10 +340,22 @@ export default function ResultsPage() {
       <main className="max-w-6xl mx-auto px-6 py-12">
         <div className="mb-10 text-center">
             <h2 className="text-4xl font-extrabold mb-4 tracking-tight">Your dataset determines your model’s performance.</h2>
-            <p className="text-lg max-w-2xl mx-auto">
+            <p className="text-lg max-w-2xl mx-auto mb-6 text-neutral-600">
                 We found <span className="text-red-500 font-bold">{actualIssues.length}</span> critical issues. 
                 Applying the suggested fixes will demonstrably improve your baseline model. Click on the suggested issues for implementation guides!
             </p>
+            
+            <div className="flex justify-center mt-4">
+                <input type="file" ref={fileInputRef} className="hidden" onChange={handleClean} accept=".csv,.xlsx,.xls,.json,.parquet" />
+                <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={cleaning}
+                    className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-8 py-3.5 rounded-full font-bold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <Sparkles className="w-5 h-5" />
+                    {cleaning ? "Cleaning Dataset..." : "Auto-Clean Dataset"}
+                </button>
+            </div>
         </div>
 
         <div className="flex justify-center mb-10">
