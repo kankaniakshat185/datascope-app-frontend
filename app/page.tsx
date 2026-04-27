@@ -69,13 +69,13 @@ export default function Home() {
 
       <div className="max-w-2xl mx-auto mt-32 p-10 rounded-3xl shadow-2xl backdrop-blur-xl">
         <h2 className="text-2xl font-semibold mb-2 text-center">Analyze a New Dataset</h2>
-        <p className="text-black mb-8 leading-relaxed">Upload your CSV to receive a comprehensive evaluation of data quality and model performance. Identify key issues, understand their impact, and get actionable recommendations for improvement.</p>
+        <p className="text-black mb-8 leading-relaxed">Upload your dataset (CSV, Excel, JSON, Parquet) to receive a comprehensive evaluation of data quality and model performance. Identify key issues, understand their impact, and get actionable recommendations for improvement.</p>
 
         <div className="flex flex-col gap-6">
           <div className="border border-dashed p-4 rounded-xl bg-neutral-400/20 flex justify-center">
             <input
               type="file"
-              accept=".csv"
+              accept=".csv,.xlsx,.xls,.json,.parquet"
               id="file-input"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="block text-sm text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
