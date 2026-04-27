@@ -241,6 +241,7 @@ export default function ResultsPage() {
   const router = useRouter();
   const [data, setData] = useState<DatasetResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'issues' | 'dictionary'>('issues');
 
   useEffect(() => {
     fetch(`/api/analysis/${params.id}`)
@@ -303,8 +304,31 @@ export default function ResultsPage() {
             </p>
         </div>
 
-        {dataDictResult && dataDictResult.rawJson && (
-          <div className="mb-12 bg-white rounded-3xl p-8 border border-neutral-200 shadow-xl overflow-hidden">
+        <div className="flex justify-center mb-10">
+          <div className="bg-neutral-200/50 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-neutral-200">
+            <button 
+              onClick={() => setActiveTab('issues')}
+              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'issues' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Detected Issues ({actualIssues.length})
+              </div>
+            </button>
+            <button 
+              onClick={() => setActiveTab('dictionary')}
+              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'dictionary' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
+            >
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                Data Dictionary
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'dictionary' && dataDictResult && dataDictResult.rawJson && (
+          <div className="bg-white rounded-3xl p-8 border border-neutral-200 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
              <div className="flex items-center gap-3 mb-6">
                 <Database className="w-8 h-8 text-blue-500" />
                 <h3 className="text-2xl font-bold">Data Dictionary</h3>
@@ -357,58 +381,60 @@ export default function ResultsPage() {
           </div>
         )}
 
-        <div className="space-y-6">
-          {actualIssues.map((issue) => (
-            <div key={issue.id} className={`p-6 rounded-2xl border ${severityBg[issue.severity]} backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition hover:-translate-y-1 hover:shadow-xl`}>
-                
-                {/* Left side: Icon & Details */}
-                <div className="flex gap-5 items-start">
-                    <div className="pt-1">
-                        {severityIcon[issue.severity]}
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${issue.severity === 'HIGH' ? 'bg-red-500/20 text-red-400' : issue.severity === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                                {issue.severity} PRIORITY
-                            </span>
-                        </div>
-                        <h3 className="text-xl font-semibold mb-1"><RichText content={issue.description} /></h3>
-                        <p className="text-sm">→ Fix: <span className=" font-medium"><RichText content={issue.suggestion} /></span></p>
-                    </div>
-                </div>
+        {activeTab === 'issues' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {actualIssues.map((issue) => (
+              <div key={issue.id} className={`p-6 rounded-2xl border ${severityBg[issue.severity]} backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition hover:-translate-y-1 hover:shadow-xl`}>
+                  
+                  {/* Left side: Icon & Details */}
+                  <div className="flex gap-5 items-start">
+                      <div className="pt-1">
+                          {severityIcon[issue.severity]}
+                      </div>
+                      <div>
+                          <div className="flex items-center gap-2 mb-2">
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${issue.severity === 'HIGH' ? 'bg-red-500/20 text-red-400' : issue.severity === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                  {issue.severity} PRIORITY
+                              </span>
+                          </div>
+                          <h3 className="text-xl font-semibold mb-1"><RichText content={issue.description} /></h3>
+                          <p className="text-sm">→ Fix: <span className=" font-medium"><RichText content={issue.suggestion} /></span></p>
+                      </div>
+                  </div>
 
-                {/* Right side: Impact Metric */}
-                <div className="flex flex-col gap-3 bg-white border p-4 rounded-xl shadow-inner min-w-[280px]">
-                    <div className={`text-center ${issue.rawJson?.metric ? 'pb-3 border-b border-neutral-200' : ''}`}>
-                        <div className="flex items-center justify-center gap-1.5 mb-1 text-emerald-400">
-                            <Activity className="w-4 h-4" />
-                            <span className="text-xs font-semibold tracking-wider uppercase">Projected Impact</span>
-                        </div>
-                        <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
-                            {issue.impactScore}
-                        </div>
-                        {issue.rawJson?.confidence_score !== undefined && (
-                            <div className="text-[10px] text-neutral-500 mt-1 uppercase tracking-widest">
-                                Confidence: {issue.rawJson.confidence_score.toFixed(1)}%
-                            </div>
-                        )}
-                    </div>
-                    {issue.rawJson?.metric && issue.rawJson?.baseline_score !== undefined && issue.rawJson?.after_score !== undefined && (
-                        <MetricChart baseline={issue.rawJson.baseline_score} after={issue.rawJson.after_score} metric={issue.rawJson.metric} />
-                    )}
-                </div>
+                  {/* Right side: Impact Metric */}
+                  <div className="flex flex-col gap-3 bg-white border p-4 rounded-xl shadow-inner min-w-[280px]">
+                      <div className={`text-center ${issue.rawJson?.metric ? 'pb-3 border-b border-neutral-200' : ''}`}>
+                          <div className="flex items-center justify-center gap-1.5 mb-1 text-emerald-400">
+                              <Activity className="w-4 h-4" />
+                              <span className="text-xs font-semibold tracking-wider uppercase">Projected Impact</span>
+                          </div>
+                          <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
+                              {issue.impactScore}
+                          </div>
+                          {issue.rawJson?.confidence_score !== undefined && (
+                              <div className="text-[10px] text-neutral-500 mt-1 uppercase tracking-widest">
+                                  Confidence: {issue.rawJson.confidence_score.toFixed(1)}%
+                              </div>
+                          )}
+                      </div>
+                      {issue.rawJson?.metric && issue.rawJson?.baseline_score !== undefined && issue.rawJson?.after_score !== undefined && (
+                          <MetricChart baseline={issue.rawJson.baseline_score} after={issue.rawJson.after_score} metric={issue.rawJson.metric} />
+                      )}
+                  </div>
 
-            </div>
-          ))}
+              </div>
+            ))}
 
-          {actualIssues.length === 0 && (
-             <div className="text-center py-20 border border-neutral-800 rounded-3xl bg-neutral-900/30">
-                <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold">Your dataset looks great!</h3>
-                <p className="text-neutral-400 mt-2">No critical machine learning or structural issues found.</p>
-             </div>
-          )}
-        </div>
+            {actualIssues.length === 0 && (
+               <div className="text-center py-20 border border-neutral-800 rounded-3xl bg-neutral-900/30">
+                  <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold">Your dataset looks great!</h3>
+                  <p className="text-neutral-400 mt-2">No critical machine learning or structural issues found.</p>
+               </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
