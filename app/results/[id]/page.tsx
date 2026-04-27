@@ -252,11 +252,10 @@ export default function ResultsPage() {
       
       setCleaning(true);
       try {
-          const mlServiceUrl = process.env.NEXT_PUBLIC_ML_SERVICE_URL || "http://localhost:8000";
           const formData = new FormData();
           formData.append("file", file);
           
-          const res = await fetch(`${mlServiceUrl}/clean`, {
+          const res = await fetch(`/api/clean`, {
               method: "POST",
               body: formData,
           });
