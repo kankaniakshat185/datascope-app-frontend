@@ -212,10 +212,10 @@ const GlossaryTerm = ({ term, url, tooltip, children }: { term: string, url: str
 };
 
 const RichText = ({ content }: { content: string }) => {
-    let parts: (string | ReactNode)[] = [content];
+    let parts: any[] = [content];
 
     GLOSSARY.forEach((item, index) => {
-        parts = parts.flatMap((part, i) => {
+        parts = parts.flatMap((part: any, i: number) => {
             if (typeof part !== 'string') return [part];
             
             const words = part.split(item.regex);
