@@ -265,9 +265,9 @@ export default function ResultsPage() {
 
   const dataDictResult = data.analysisResults.find((i: Issue) => i.issueType === "DATA_DICTIONARY");
   const edaResult = data.analysisResults.find((i: Issue) => i.issueType === "EDA_DATA");
-  const edaData = edaResult?.rawJson;
+  const edaData = edaResult?.rawJson as any;
   const shapResult = data.analysisResults.find((i: Issue) => i.issueType === "SHAP_DATA");
-  const shapData = shapResult?.rawJson;
+  const shapData = shapResult?.rawJson as any;
   const actualIssues = data.analysisResults.filter((i: Issue) => !["DATA_DICTIONARY", "EDA_DATA", "SHAP_DATA"].includes(i.issueType));
 
   const severityIcon = {
