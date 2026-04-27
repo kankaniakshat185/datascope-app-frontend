@@ -10,6 +10,7 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [rulesJson, setRulesJson] = useState("");
   const [uploading, setUploading] = useState(false);
   const router = useRouter();
 
@@ -38,6 +39,9 @@ export default function Home() {
     setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
+    if (rulesJson.trim() !== "") {
+        formData.append("rules", rulesJson);
+    }
 
     const res = await fetch("/api/upload", {
       method: "POST",
@@ -81,6 +85,23 @@ export default function Home() {
               className="block text-sm text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
             />
           </div>
+          
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-semibold text-neutral-700 flex justify-between items-center">
+                Custom Rules (Optional)
+                <span className="text-xs font-normal text-neutral-500 bg-neutral-200 px-2 py-0.5 rounded-full">JSON Format</span>
+            </label>
+            <p className="text-xs text-neutral-500">
+                E.g. <code>[{"{"}"column": "Age", "type": "min", "value": 0{"}"}]</code> to enforce business logic.
+            </p>
+            <textarea
+               value={rulesJson}
+               onChange={(e) => setRulesJson(e.target.value)}
+               placeholder={'[\n  { "column": "Age", "type": "min", "value": 0 },\n  { "column": "Status", "type": "in", "value": ["Active", "Inactive"] }\n]'}
+               className="w-full h-32 p-3 text-sm font-mono text-neutral-800 bg-neutral-100 rounded-xl border border-neutral-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none transition-all placeholder:text-neutral-400"
+            />
+          </div>
+
           <button
             disabled={!file || uploading}
             onClick={handleUpload}

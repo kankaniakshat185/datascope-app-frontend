@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
+    const rules = formData.get("rules") as string | null;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -38,6 +39,9 @@ export async function POST(req: NextRequest) {
     // ✅ Prepare requests
     const mlFormData = new FormData();
     mlFormData.append("file", new Blob([buffer], { type: file.type }), file.name);
+    if (rules) {
+        mlFormData.append("rules", rules);
+    }
 
     const dictFormData = new FormData();
     dictFormData.append("file", new Blob([buffer], { type: file.type }), file.name);
