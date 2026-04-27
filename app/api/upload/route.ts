@@ -49,11 +49,14 @@ export async function POST(req: NextRequest) {
     const edaFormData = new FormData();
     edaFormData.append("file", new Blob([buffer], { type: file.type }), file.name);
 
+    const shapFormData = new FormData();
+    shapFormData.append("file", new Blob([buffer], { type: file.type }), file.name);
+
     // ✅ Add timeout protection
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
+    const timeout = setTimeout(() => controller.abort(), 60000);
 
-    const [mlResponse, dictResponse, edaResponse] = await Promise.all([
+    const [mlResponse, dictResponse, edaResponse, shapResponse] = await Promise.all([
       fetch(`${mlServiceUrl}/analyze`, {
         method: "POST",
         body: mlFormData,
@@ -68,6 +71,11 @@ export async function POST(req: NextRequest) {
         method: "POST",
         body: edaFormData,
         signal: controller.signal,
+      }),
+      fetch(`${mlServiceUrl}/shap`, {
+        method: "POST",
+        body: shapFormData,
+        signal: controller.signal,
       })
     ]);
 
@@ -80,6 +88,7 @@ export async function POST(req: NextRequest) {
     const mlData = await mlResponse.json();
     const dictData = dictResponse.ok ? await dictResponse.json() : null;
     const edaData = edaResponse.ok ? await edaResponse.json() : null;
+    const shapData = shapResponse.ok ? await shapResponse.json() : null;
 
     if (!mlData?.issues || !Array.isArray(mlData.issues)) {
       throw new Error("Invalid ML response format");
@@ -130,6 +139,20 @@ export async function POST(req: NextRequest) {
           suggestion: "",
           impactScore: "0%",
           rawJson: edaData,
+        },
+      });
+    }
+
+    if (shapData && !shapData.error) {
+      await prisma.analysisResult.create({
+        data: {
+          datasetId: dataset.id,
+          issueType: "SHAP_DATA",
+          severity: "INFO",
+          description: "Feature Importance & SHAP Values",
+          suggestion: "",
+          impactScore: "0%",
+          rawJson: shapData,
         },
       });
     }

@@ -266,7 +266,9 @@ export default function ResultsPage() {
   const dataDictResult = data.analysisResults.find((i: Issue) => i.issueType === "DATA_DICTIONARY");
   const edaResult = data.analysisResults.find((i: Issue) => i.issueType === "EDA_DATA");
   const edaData = edaResult?.rawJson;
-  const actualIssues = data.analysisResults.filter((i: Issue) => i.issueType !== "DATA_DICTIONARY" && i.issueType !== "EDA_DATA");
+  const shapResult = data.analysisResults.find((i: Issue) => i.issueType === "SHAP_DATA");
+  const shapData = shapResult?.rawJson;
+  const actualIssues = data.analysisResults.filter((i: Issue) => !["DATA_DICTIONARY", "EDA_DATA", "SHAP_DATA"].includes(i.issueType));
 
   const severityIcon = {
     HIGH: <AlertCircle className="w-6 h-6 text-red-500" />,
@@ -460,6 +462,45 @@ export default function ResultsPage() {
 
         {activeTab === 'issues' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {shapData && shapData.features && shapData.features.length > 0 && (
+                <div className="bg-gradient-to-br from-neutral-900 to-black rounded-3xl p-8 shadow-2xl mb-8 relative overflow-hidden border border-neutral-800">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
+                    
+                    <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
+                        <div className="flex-1 text-white w-full">
+                            <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                                <Activity className="w-6 h-6 text-emerald-400" />
+                                Model Intelligence
+                            </h3>
+                            <p className="text-neutral-400 text-sm mb-6 max-w-2xl">
+                                Based on a SHAP analysis of a Random Forest trained to predict <span className="font-bold text-white bg-white/10 px-2 py-0.5 rounded">{shapData.target}</span>, these are the Top 10 most influential features driving your data's predictive power.
+                            </p>
+                            
+                            <div className="space-y-3">
+                                {shapData.features.slice(0, 10).map((feature: string, idx: number) => {
+                                    const maxVal = Math.max(...shapData.importance);
+                                    const width = Math.max(5, (shapData.importance[idx] / maxVal) * 100);
+                                    
+                                    return (
+                                        <div key={feature} className="flex items-center gap-4">
+                                            <span className="w-32 text-xs font-mono truncate text-neutral-300 text-right">{feature}</span>
+                                            <div className="flex-1 h-3 bg-neutral-800 rounded-full overflow-hidden">
+                                                <div 
+                                                    className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-blue-500'}`} 
+                                                    style={{ width: `${width}%` }}
+                                                ></div>
+                                            </div>
+                                            <span className="w-12 text-xs text-neutral-500">{(shapData.importance[idx] * 100).toFixed(1)}</span>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             {actualIssues.map((issue) => (
               <div key={issue.id} className={`p-6 rounded-2xl border ${severityBg[issue.severity]} backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition hover:-translate-y-1 hover:shadow-xl`}>
                   
