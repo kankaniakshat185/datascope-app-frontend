@@ -2,7 +2,8 @@
 
 import { useEffect, useState, ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database } from "lucide-react";
+import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 type Issue = {
   id: string;
@@ -241,7 +242,7 @@ export default function ResultsPage() {
   const router = useRouter();
   const [data, setData] = useState<DatasetResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'issues' | 'dictionary'>('issues');
+  const [activeTab, setActiveTab] = useState<'issues' | 'dictionary' | 'eda'>('issues');
 
   useEffect(() => {
     fetch(`/api/analysis/${params.id}`)
@@ -263,7 +264,9 @@ export default function ResultsPage() {
   if (!data) return <div className="min-h-screen bg-neutral-400 flex items-center justify-center text-white">Analysis not found. Make sure you are logged in.</div>;
 
   const dataDictResult = data.analysisResults.find((i: Issue) => i.issueType === "DATA_DICTIONARY");
-  const actualIssues = data.analysisResults.filter((i: Issue) => i.issueType !== "DATA_DICTIONARY");
+  const edaResult = data.analysisResults.find((i: Issue) => i.issueType === "EDA_DATA");
+  const edaData = edaResult?.rawJson;
+  const actualIssues = data.analysisResults.filter((i: Issue) => i.issueType !== "DATA_DICTIONARY" && i.issueType !== "EDA_DATA");
 
   const severityIcon = {
     HIGH: <AlertCircle className="w-6 h-6 text-red-500" />,
@@ -324,6 +327,15 @@ export default function ResultsPage() {
                 Data Dictionary
               </div>
             </button>
+            <button 
+              onClick={() => setActiveTab('eda')}
+              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'eda' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
+            >
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                EDA Dashboard
+              </div>
+            </button>
           </div>
         </div>
 
@@ -378,6 +390,71 @@ export default function ResultsPage() {
                    </tbody>
                 </table>
              </div>
+          </div>
+        )}
+
+        {activeTab === 'eda' && edaData && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {edaData.distributions && Object.keys(edaData.distributions).length > 0 && (
+                <div className="bg-white rounded-3xl p-8 border border-neutral-200 shadow-xl overflow-hidden">
+                   <h3 className="text-2xl font-bold mb-6 flex items-center gap-2"><BarChart3 className="w-6 h-6 text-blue-500"/> Numeric Distributions</h3>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {Object.entries(edaData.distributions).map(([col, data]: [string, any]) => {
+                          const chartData = data.labels.map((lbl: string, i: number) => ({
+                              name: lbl,
+                              count: data.counts[i]
+                          }));
+                          return (
+                              <div key={col} className="bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
+                                 <h4 className="font-semibold text-center mb-4 text-neutral-700">{col}</h4>
+                                 <div className="h-64">
+                                     <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={chartData}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                            <XAxis dataKey="name" fontSize={10} tickMargin={10} axisLine={false} tickLine={false} />
+                                            <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                                            <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                                            <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                        </BarChart>
+                                     </ResponsiveContainer>
+                                 </div>
+                              </div>
+                          );
+                      })}
+                   </div>
+                </div>
+            )}
+
+            {edaData.value_counts && Object.keys(edaData.value_counts).length > 0 && (
+                <div className="bg-white rounded-3xl p-8 border border-neutral-200 shadow-xl overflow-hidden">
+                   <h3 className="text-2xl font-bold mb-6 flex items-center gap-2"><BarChart3 className="w-6 h-6 text-purple-500"/> Top Categories</h3>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {Object.entries(edaData.value_counts).map(([col, data]: [string, any]) => {
+                          const chartData = data.labels.map((lbl: string, i: number) => ({
+                              name: lbl.length > 15 ? lbl.substring(0,15)+"..." : lbl,
+                              count: data.counts[i],
+                              fullName: lbl
+                          }));
+                          return (
+                              <div key={col} className="bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
+                                 <h4 className="font-semibold text-center mb-4 text-neutral-700">{col}</h4>
+                                 <div className="h-64">
+                                     <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={chartData} layout="vertical" margin={{ left: 40 }}>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+                                            <XAxis type="number" fontSize={10} axisLine={false} tickLine={false} />
+                                            <YAxis dataKey="name" type="category" fontSize={10} axisLine={false} tickLine={false} />
+                                            <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                                            <Bar dataKey="count" fill="#a855f7" radius={[0, 4, 4, 0]} />
+                                        </BarChart>
+                                     </ResponsiveContainer>
+                                 </div>
+                              </div>
+                          );
+                      })}
+                   </div>
+                </div>
+            )}
           </div>
         )}
 
