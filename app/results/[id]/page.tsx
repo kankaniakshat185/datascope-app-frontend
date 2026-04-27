@@ -2,7 +2,7 @@
 
 import { useEffect, useState, ReactNode, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles } from "lucide-react";
+import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles, GitBranch } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 type Issue = {
@@ -242,9 +242,47 @@ export default function ResultsPage() {
   const router = useRouter();
   const [data, setData] = useState<DatasetResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'issues' | 'dictionary' | 'eda' | 'remediation'>('issues');
+  const [activeTab, setActiveTab] = useState<'issues' | 'dictionary' | 'eda' | 'remediation' | 'drift'>('issues');
   const [cleaning, setCleaning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [driftLoading, setDriftLoading] = useState(false);
+  const [driftResults, setDriftResults] = useState<any>(null);
+  const driftInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDrift = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      const edaResult = data?.analysisResults.find((i: Issue) => i.issueType === "EDA_DATA");
+      const edaData = edaResult?.rawJson as any;
+      if (!edaData || !edaData.distributions) {
+          alert("Cannot perform drift analysis: Missing training data distributions.");
+          return;
+      }
+
+      setDriftLoading(true);
+      try {
+          const formData = new FormData();
+          formData.append("test_file", file);
+          formData.append("train_distributions", JSON.stringify(edaData.distributions));
+          
+          const res = await fetch(`/api/drift`, {
+              method: "POST",
+              body: formData,
+          });
+          
+          if (!res.ok) throw new Error("Drift analysis failed");
+          
+          const result = await res.json();
+          setDriftResults(result);
+      } catch (err) {
+          console.error(err);
+          alert("Failed to analyze data drift.");
+      } finally {
+          setDriftLoading(false);
+          if (driftInputRef.current) driftInputRef.current.value = '';
+      }
+  };
 
   const handleClean = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -385,6 +423,15 @@ export default function ResultsPage() {
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4" />
                 Auto-Clean
+              </div>
+            </button>
+            <button 
+              onClick={() => setActiveTab('drift')}
+              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'drift' ? 'bg-gradient-to-r from-red-500 to-orange-600 text-white shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
+            >
+              <div className="flex items-center gap-2">
+                <GitBranch className="w-4 h-4" />
+                Drift Detection
               </div>
             </button>
           </div>
@@ -657,6 +704,75 @@ export default function ResultsPage() {
                   <p className="text-neutral-400 mt-2">No critical machine learning or structural issues found.</p>
                </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'drift' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-3xl p-10 border border-neutral-200 shadow-xl overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full blur-3xl"></div>
+                
+                <div className="relative z-10 max-w-4xl mx-auto">
+                    <div className="text-center mb-10">
+                        <GitBranch className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                        <h3 className="text-3xl font-bold mb-4 text-neutral-900">Data Drift Detection</h3>
+                        <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+                            Upload your Test or Production dataset to compare against this Training dataset. 
+                            We use the <strong>Population Stability Index (PSI)</strong> to instantly detect if your feature distributions have drifted and are threatening model performance.
+                        </p>
+                    </div>
+
+                    <div className="flex justify-center mb-12">
+                        <input type="file" ref={driftInputRef} className="hidden" onChange={handleDrift} accept=".csv,.xlsx,.xls,.json,.parquet" />
+                        <button 
+                            onClick={() => driftInputRef.current?.click()}
+                            disabled={driftLoading}
+                            className="inline-flex items-center gap-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-10 py-4 rounded-full font-bold text-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <GitBranch className="w-6 h-6" />
+                            {driftLoading ? "Analyzing Distributions..." : "Upload Test Dataset"}
+                        </button>
+                    </div>
+
+                    {driftResults && (
+                        <div className="bg-neutral-50 rounded-2xl p-8 border border-neutral-200">
+                            <h4 className="text-2xl font-bold mb-6 text-center">
+                                {driftResults.drift_detected ? (
+                                    <span className="text-red-600 flex items-center justify-center gap-2"><AlertTriangle className="w-6 h-6" /> Significant Drift Detected</span>
+                                ) : (
+                                    <span className="text-emerald-600 flex items-center justify-center gap-2"><CheckCircle className="w-6 h-6" /> No Significant Drift</span>
+                                )}
+                            </h4>
+                            
+                            {driftResults.drifted_features.length > 0 ? (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-3 text-sm font-bold text-neutral-500 uppercase tracking-wider px-4 pb-2 border-b border-neutral-200">
+                                        <div>Feature</div>
+                                        <div className="text-center">Severity</div>
+                                        <div className="text-right">PSI Score</div>
+                                    </div>
+                                    {driftResults.drifted_features.map((feature: any) => (
+                                        <div key={feature.column} className="grid grid-cols-3 items-center bg-white p-4 rounded-xl border border-neutral-200 shadow-sm">
+                                            <div className="font-bold text-neutral-800">{feature.column}</div>
+                                            <div className="flex justify-center">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${feature.severity === 'HIGH' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                    {feature.severity}
+                                                </span>
+                                            </div>
+                                            <div className="text-right font-mono font-bold text-neutral-700">{feature.psi.toFixed(3)}</div>
+                                        </div>
+                                    ))}
+                                    <p className="text-xs text-neutral-500 text-center mt-6">
+                                        * PSI &lt; 0.1: No Drift | 0.1 - 0.2: Moderate Drift | &gt; 0.2: Significant Drift
+                                    </p>
+                                </div>
+                            ) : (
+                                <p className="text-center text-neutral-600 font-bold">All feature distributions align perfectly with the training dataset.</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
           </div>
         )}
       </main>
