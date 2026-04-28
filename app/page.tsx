@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { authClient } from "../lib/auth-client";
 import { useRouter } from "next/navigation";
-import { Settings2, ChevronDown, ChevronUp } from "lucide-react";
+import { Settings2, ChevronDown, ChevronUp, UploadCloud, ArrowRight } from "lucide-react";
 
 export default function Home() {
   const { data: session, isPending } = authClient.useSession();
@@ -60,72 +60,70 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-200 text-black font-[family-name:var(--font-geist-sans)]">
-      <div className="flex justify-between items-center mb-10 p-6 border-b-4 border-black">
-        <div className="flex items-center gap-4 invisible">
-          <span className="text-sm">{session.user.email}</span>
-          <button className="text-sm hover:text-white transition-colors" onClick={() => authClient.signOut()}>Sign Out</button>
+    <div className="min-h-screen bg-neutral-200 text-black font-sans">
+      <header className="flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-10">
+        <div className="flex items-center">
+          <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
         </div>
-        <h1 className="text-4xl font-bold text-black text-center font-archivo uppercase tracking-tighter">DataScope</h1>
         <div className="flex items-center gap-4">
-          <span className="text-sm">{session.user.email}</span>
-          <button className="text-sm hover:text-white transition-colors" onClick={() => authClient.signOut()}>Sign Out</button>
+          <span className="text-sm font-semibold">{session.user.email}</span>
+          <button className="text-sm font-semibold bg-neutral-800 text-white px-4 py-1.5 rounded-lg hover:bg-neutral-700 transition-colors shadow-sm" onClick={() => authClient.signOut()}>LOG OUT</button>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-2xl mx-auto mt-32 p-10 rounded-3xl shadow-2xl backdrop-blur-xl">
-        <h2 className="text-2xl font-semibold mb-2 text-center">Analyze a New Dataset</h2>
-        <p className="text-black mb-8 leading-relaxed">Upload your dataset (CSV, Excel, JSON, Parquet) to receive a comprehensive evaluation of data quality and model performance. Identify key issues, understand their impact, and get actionable recommendations for improvement.</p>
+      <div className="max-w-3xl mx-auto mt-32 px-6">
+        <h2 className="text-4xl font-bold mb-4 text-center text-neutral-900 tracking-tight">Intelligent Analysis</h2>
+        <p className="text-neutral-500 mb-10 text-center text-base leading-relaxed max-w-lg mx-auto">Drop your dataset in to get instant diagnostics, insights, and automated fixes.</p>
 
-        <div className="flex flex-col gap-6">
-          <div className="border border-dashed p-4 rounded-xl bg-neutral-400/20 flex justify-center">
+        <div className="p-3 bg-white rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-neutral-100 flex items-center justify-between gap-4">
+          <div className="flex-1 flex items-center gap-3 border-2 border-dashed border-neutral-200 hover:border-blue-400 hover:bg-blue-50/50 transition-colors py-2 px-6 rounded-2xl group cursor-pointer relative overflow-hidden h-[4.5rem]">
+            <UploadCloud className="w-6 h-6 text-blue-500 shrink-0 group-hover:scale-110 transition-transform" />
             <input
               type="file"
               accept=".csv,.xlsx,.xls,.json,.parquet"
               id="file-input"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="block text-sm text-black file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
-          </div>
-          
-          <div className="flex flex-col gap-2">
-            <button 
-                onClick={() => setShowAdvanced(!showAdvanced)} 
-                className="flex items-center justify-between w-full py-3 px-4 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-xl transition-all"
-            >
-                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-700">
-                    <Settings2 className="w-4 h-4" />
-                    Advanced Settings
-                </div>
-                {showAdvanced ? <ChevronUp className="w-4 h-4 text-neutral-500" /> : <ChevronDown className="w-4 h-4 text-neutral-500" />}
-            </button>
-            
-            {showAdvanced && (
-                <div className="mt-2 p-5 bg-neutral-50 border border-neutral-200 rounded-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <label className="text-sm font-semibold text-neutral-700 flex justify-between items-center">
-                        Custom Rules
-                        <span className="text-xs font-normal text-neutral-500 bg-neutral-200 px-2 py-0.5 rounded-full">JSON Format</span>
-                    </label>
-                    <p className="text-xs text-neutral-500">
-                        E.g. <code>[{"{"}"column": "Age", "type": "min", "value": 0{"}"}]</code> to enforce business logic.
-                    </p>
-                    <textarea
-                       value={rulesJson}
-                       onChange={(e) => setRulesJson(e.target.value)}
-                       placeholder={'[\n  { "column": "Age", "type": "min", "value": 0 },\n  { "column": "Status", "type": "in", "value": ["Active", "Inactive"] }\n]'}
-                       className="w-full h-32 p-3 text-sm font-mono text-neutral-800 bg-white rounded-xl border border-neutral-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none transition-all placeholder:text-neutral-400 shadow-inner"
-                    />
-                </div>
-            )}
+            <span className="text-sm font-semibold text-neutral-600 truncate z-0">
+              {file ? file.name : "Choose a dataset (CSV, JSON, Excel...)"}
+            </span>
           </div>
 
           <button
             disabled={!file || uploading}
             onClick={handleUpload}
-            className="w-full bg-blue-500 text-white p-3.5 rounded-xl font-medium disabled:cursor-not-allowed hover:bg-blue-400 transition-all shadow-lg"
+            className="h-[4.5rem] px-10 bg-neutral-900 text-white rounded-2xl font-bold text-sm tracking-wide hover:bg-neutral-800 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shrink-0"
           >
-            {uploading ? "Analyzing Impact Metrics..." : "Run Debugger"}
+            {uploading ? "Analyzing..." : "Run Debugger"}
+            {!uploading && <ArrowRight className="w-4 h-4" />}
           </button>
+        </div>
+
+        <div className="flex flex-col items-end mt-4">
+            <button 
+                onClick={() => setShowAdvanced(!showAdvanced)} 
+                className="flex items-center gap-2 text-xs font-bold text-neutral-400 hover:text-neutral-800 transition-colors px-2 py-1"
+            >
+                <Settings2 className="w-3.5 h-3.5" />
+                Advanced Settings
+                {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+            
+            {showAdvanced && (
+                <div className="mt-3 w-full max-w-sm p-6 bg-white border border-neutral-200 rounded-3xl shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="text-sm font-bold text-neutral-700 flex justify-between items-center">
+                        Custom Rules
+                        <span className="text-[10px] font-bold tracking-wider uppercase text-neutral-500 bg-neutral-200 px-2 py-1 rounded-md">JSON</span>
+                    </label>
+                    <textarea
+                       value={rulesJson}
+                       onChange={(e) => setRulesJson(e.target.value)}
+                       placeholder={'[\n  { "column": "Age", "type": "min", "value": 0 }\n]'}
+                       className="w-full h-28 p-3 text-xs font-mono text-neutral-800 bg-neutral-50 rounded-xl border border-neutral-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all placeholder:text-neutral-400"
+                    />
+                </div>
+            )}
         </div>
       </div>
     </div>

@@ -357,19 +357,17 @@ export default function ResultsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-100 text-black font-[family-name:var(--font-geist-sans)]">
+    <div className="min-h-screen bg-neutral-100 text-black font-sans">
       {/* Header */}
-      <header className="border-b-4 backdrop-blur-md sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => router.push("/")} className="text-neutral-400 hover:text-white transition">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-3xl font-bold text-black text-center font-archivo uppercase tracking-tighter">DataScope</h1>
-          </div>
-          <div className="text-md text-black">
-            Analyzing: <span className="">{data.fileName}</span>
-          </div>
+      <header className="flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-10">
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.push("/")} className="text-neutral-800 hover:text-black transition flex items-center justify-center bg-white/50 p-1.5 rounded-md hover:bg-white/80">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
+        </div>
+        <div className="text-sm font-semibold text-black bg-white/50 px-4 py-1.5 rounded-lg border border-black/10 shadow-sm">
+          Analyzing: <span className="font-bold">{data.fileName}</span>
         </div>
       </header>
 
@@ -422,7 +420,7 @@ export default function ResultsPage() {
             >
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4" />
-                Auto-Clean
+                Auto Clean
               </div>
             </button>
             <button 
