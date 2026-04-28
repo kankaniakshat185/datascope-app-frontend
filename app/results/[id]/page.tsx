@@ -365,7 +365,7 @@ export default function ResultsPage() {
             <button onClick={() => router.push("/")} className="text-neutral-400 hover:text-white transition">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-3xl font-bold text-black text-center font-playfair">DataScope</h1>
+            <h1 className="text-3xl font-bold text-black text-center font-archivo uppercase tracking-tighter">DataScope</h1>
           </div>
           <div className="text-md text-black">
             Analyzing: <span className="">{data.fileName}</span>
