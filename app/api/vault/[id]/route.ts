@@ -4,9 +4,10 @@ import { prisma } from "../../../../lib/auth";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await auth.api.getSession({
       headers: req.headers,
     });
@@ -15,7 +16,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const datasetId = params.id;
+    const datasetId = id;
 
     // Check if dataset belongs to user
     const dataset = await prisma.dataset.findUnique({
