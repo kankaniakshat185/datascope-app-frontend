@@ -76,7 +76,7 @@ export default function Home() {
         <p className="text-neutral-500 mb-10 text-center text-base leading-relaxed max-w-lg mx-auto">Drop your dataset in to get instant diagnostics, insights, and automated fixes.</p>
 
         <div className="p-3 bg-white rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-neutral-100 flex items-center justify-between gap-4">
-          <div className="flex-1 flex items-center gap-3 border-2 border-dashed border-neutral-200 hover:border-blue-400 hover:bg-blue-50/50 transition-colors py-2 px-6 rounded-2xl group cursor-pointer relative overflow-hidden h-[4.5rem]">
+          <div className="flex-1 flex items-center gap-3 border-2 border-dashed border-neutral-200 hover:border-blue-400 hover:bg-blue-50/50 transition-colors py-2 px-6 rounded-2xl group cursor-pointer relative overflow-hidden h-14">
             <UploadCloud className="w-6 h-6 text-blue-500 shrink-0 group-hover:scale-110 transition-transform" />
             <input
               type="file"
@@ -93,34 +93,38 @@ export default function Home() {
           <button
             disabled={!file || uploading}
             onClick={handleUpload}
-            className="h-[4.5rem] px-10 bg-neutral-900 text-white rounded-2xl font-bold text-sm tracking-wide hover:bg-neutral-800 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shrink-0"
+            className="h-14 px-10 bg-neutral-900 text-white rounded-2xl font-bold text-sm tracking-wide hover:bg-neutral-800 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shrink-0"
           >
             {uploading ? "Analyzing..." : "Run Debugger"}
-            {!uploading && <ArrowRight className="w-4 h-4" />}
           </button>
         </div>
 
-        <div className="flex flex-col items-end mt-4">
+        <div className="flex flex-col mt-4">
             <button 
                 onClick={() => setShowAdvanced(!showAdvanced)} 
-                className="flex items-center gap-2 text-xs font-bold text-neutral-400 hover:text-neutral-800 transition-colors px-2 py-1"
+                className="flex items-center gap-2 text-sm font-bold text-black hover:text-neutral-700 transition-colors px-2 py-1 ml-auto"
             >
-                <Settings2 className="w-3.5 h-3.5" />
+                <Settings2 className="w-4 h-4" />
                 Advanced Settings
-                {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
             
             {showAdvanced && (
-                <div className="mt-3 w-full max-w-sm p-6 bg-white border border-neutral-200 rounded-3xl shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <label className="text-sm font-bold text-neutral-700 flex justify-between items-center">
-                        Custom Rules
-                        <span className="text-[10px] font-bold tracking-wider uppercase text-neutral-500 bg-neutral-200 px-2 py-1 rounded-md">JSON</span>
-                    </label>
+                <div className="mt-3 w-full p-8 bg-white border border-neutral-200 rounded-[2rem] shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div>
+                        <label className="text-sm font-bold text-neutral-700 flex justify-between items-center mb-1">
+                            Custom Rules
+                            <span className="text-[10px] font-bold tracking-wider uppercase text-neutral-500 bg-neutral-200 px-2 py-1 rounded-md">JSON</span>
+                        </label>
+                        <p className="text-xs text-neutral-500 mb-4">
+                            Define specific constraints to validate your data. For example, enforce minimum ages, restrict categories, or specify allowed ranges for critical columns.
+                        </p>
+                    </div>
                     <textarea
                        value={rulesJson}
                        onChange={(e) => setRulesJson(e.target.value)}
-                       placeholder={'[\n  { "column": "Age", "type": "min", "value": 0 }\n]'}
-                       className="w-full h-28 p-3 text-xs font-mono text-neutral-800 bg-neutral-50 rounded-xl border border-neutral-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all placeholder:text-neutral-400"
+                       placeholder={'[\n  { "column": "Age", "type": "min", "value": 0 },\n  { "column": "Status", "type": "in", "value": ["Active", "Inactive"] }\n]'}
+                       className="w-full h-32 p-4 text-sm font-mono text-neutral-800 bg-neutral-50 rounded-2xl border border-neutral-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all placeholder:text-neutral-400"
                     />
                 </div>
             )}
