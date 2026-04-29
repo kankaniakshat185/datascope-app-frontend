@@ -17,7 +17,18 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  if (isPending) return <div className="p-10 text-white min-h-screen bg-neutral-500">Loading...</div>;
+  if (isPending) return (
+    <div className="min-h-screen bg-neutral-200 flex items-center justify-center">
+        <div className="text-center space-y-4 animate-pulse">
+            <h1 className="text-6xl font-extrabold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
+            <div className="flex justify-center gap-1.5">
+                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"></div>
+            </div>
+        </div>
+    </div>
+  );
 
   const handleClearFile = () => {
     setFile(null);
@@ -46,10 +57,6 @@ export default function Home() {
                 <div className="space-y-6">
                     <h2 className="text-6xl font-extrabold tracking-tighter leading-tight">Access <br/>Intelligence</h2>
                     <p className="text-neutral-400 text-lg leading-relaxed max-w-sm">Login or Sign Up to analyze and optimize your datasets with the DataScope engine.</p>
-                    <div className="flex items-center gap-3 pt-4">
-                        <div className="w-12 h-1 px-1 bg-blue-500 rounded-full"></div>
-                        <span className="text-xs font-bold uppercase tracking-widest text-neutral-500">v1.0 Production</span>
-                    </div>
                 </div>
             </div>
 

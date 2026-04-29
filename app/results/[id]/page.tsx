@@ -366,7 +366,19 @@ export default function ResultsPage() {
       });
   }, [params.id]);
 
-  if (loading) return <div className="min-h-screen bg-neutral-400 flex items-center justify-center text-white">Loading analysis results...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-neutral-200 flex items-center justify-center">
+        <div className="text-center space-y-4 animate-pulse">
+            <h1 className="text-6xl font-extrabold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
+            <div className="flex justify-center gap-1.5">
+                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"></div>
+            </div>
+            <p className="text-xs font-bold text-neutral-500 uppercase tracking-[0.2em] animate-in fade-in duration-1000">Analyzing Dataset Intelligence</p>
+        </div>
+    </div>
+  );
   if (!data) return <div className="min-h-screen bg-neutral-400 flex items-center justify-center text-white">Analysis not found. Make sure you are logged in.</div>;
 
   const dataDictResult = data.analysisResults.find((i: Issue) => i.issueType === "DATA_DICTIONARY");
