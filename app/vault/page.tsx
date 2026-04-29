@@ -160,7 +160,7 @@ export default function VaultPage() {
                     <div className="space-y-3 pt-4 border-t border-black/5">
                        <div className="flex items-center gap-2 text-neutral-400">
                           <Calendar className="w-4 h-4" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{new Date(d.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          <span className="text-xs font-bold uppercase tracking-wider">{new Date(d.uploadedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                        </div>
                        <div className="flex items-center gap-2 text-neutral-400">
                           <LayoutGrid className="w-4 h-4" />
