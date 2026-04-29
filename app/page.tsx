@@ -138,20 +138,22 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-neutral-200 text-black font-sans flex flex-col">
       <header className="flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-[100] shadow-sm">
-        <div className="flex items-center">
-          <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
+        <div className="flex items-center cursor-pointer group" onClick={() => router.push("/")}>
+          <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter group-hover:text-blue-600 transition-colors">DataScope</h1>
         </div>
         <div className="flex items-center gap-8">
-          <nav className="flex items-center gap-6">
-             <button onClick={() => router.push("/")} className="text-sm font-bold text-black transition-colors uppercase tracking-widest">Analyzer</button>
-             <button onClick={() => router.push("/vault")} className="text-sm font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest">Vault</button>
-          </nav>
-          <div className="flex items-center gap-4">
-            <span className="text-base font-extrabold text-black/80 tracking-tight uppercase">{(session.user.name || session.user.email).toUpperCase()}</span>
-            <button className="text-sm font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest" onClick={() => authClient.signOut()}>
-              LOGOUT
-            </button>
-          </div>
+          {session && (
+            <div className="flex items-center gap-6">
+              <span className="text-base font-extrabold text-black/80 tracking-tight uppercase">{(session.user.name || session.user.email).toUpperCase()}</span>
+              <div className="h-4 w-[1px] bg-black/10"></div>
+              <nav className="flex items-center gap-6">
+                 <button onClick={() => router.push("/vault")} className="text-sm font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest">Vault</button>
+                 <button className="text-sm font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest" onClick={() => authClient.signOut()}>
+                   LOGOUT
+                 </button>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 

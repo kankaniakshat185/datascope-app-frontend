@@ -14,7 +14,8 @@ import {
   ArrowLeft,
   Clock,
   LayoutGrid,
-  Filter
+  Filter,
+  Trash2
 } from "lucide-react";
 
 export default function VaultPage() {
@@ -24,6 +25,19 @@ export default function VaultPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
 
+  const fetchDatasets = () => {
+    fetch("/api/vault")
+      .then(res => res.json())
+      .then(data => {
+        setDatasets(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  };
+
   useEffect(() => {
     if (!isPending && !session) {
       router.push("/");
@@ -31,18 +45,25 @@ export default function VaultPage() {
     }
 
     if (session) {
-      fetch("/api/vault")
-        .then(res => res.json())
-        .then(data => {
-          setDatasets(Array.isArray(data) ? data : []);
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error(err);
-          setLoading(false);
-        });
+      fetchDatasets();
     }
   }, [session, isPending, router]);
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // Prevent card click navigation
+    if (!confirm("Are you sure you want to delete this analysis history?")) return;
+
+    try {
+      const res = await fetch(`/api/vault/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setDatasets(datasets.filter(d => d.id !== id));
+      } else {
+        alert("Failed to delete");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   if (isPending || loading) return (
     <div className="min-h-screen bg-neutral-200 flex items-center justify-center">
@@ -66,22 +87,19 @@ export default function VaultPage() {
     <div className="min-h-screen bg-neutral-100 text-black font-sans flex flex-col">
       {/* Header */}
       <header className="flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-[100] shadow-sm">
-        <div className="flex items-center">
-          <button onClick={() => router.push("/")} className="mr-4 text-neutral-800 hover:text-black transition flex items-center justify-center bg-white/50 p-1.5 rounded-md hover:bg-white/80 border border-black/5 shadow-sm">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
+        <div className="flex items-center cursor-pointer group" onClick={() => router.push("/")}>
+          <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter group-hover:text-blue-600 transition-colors">DataScope</h1>
         </div>
         <div className="flex items-center gap-8">
-          <nav className="flex items-center gap-6">
-             <button onClick={() => router.push("/")} className="text-sm font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest">Analyzer</button>
-             <button onClick={() => router.push("/vault")} className="text-sm font-bold text-black transition-colors uppercase tracking-widest">Vault</button>
-          </nav>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <span className="text-base font-extrabold text-black/80 tracking-tight uppercase">{(session?.user.name || session?.user.email || "").toUpperCase()}</span>
-            <button className="text-sm font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest" onClick={() => authClient.signOut()}>
-              LOGOUT
-            </button>
+            <div className="h-4 w-[1px] bg-black/10"></div>
+            <nav className="flex items-center gap-6">
+               <button onClick={() => router.push("/vault")} className="text-sm font-bold text-black transition-colors uppercase tracking-widest">Vault</button>
+               <button className="text-sm font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest" onClick={() => authClient.signOut()}>
+                 LOGOUT
+               </button>
+            </nav>
           </div>
         </div>
       </header>
@@ -145,13 +163,21 @@ export default function VaultPage() {
                        <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
                           <FileText className="w-6 h-6 text-neutral-400 group-hover:text-blue-500 transition-colors" />
                        </div>
-                       <div className="flex gap-1.5">
-                          {highIssues > 0 && (
-                            <span className="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-black rounded-md border border-red-100 uppercase">{highIssues} High</span>
-                          )}
-                          {mediumIssues > 0 && (highIssues === 0) && (
-                            <span className="px-2 py-1 bg-yellow-50 text-yellow-600 text-[10px] font-black rounded-md border border-yellow-100 uppercase">{mediumIssues} Med</span>
-                          )}
+                       <div className="flex items-center gap-3">
+                          <div className="flex gap-1.5">
+                             {highIssues > 0 && (
+                               <span className="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-black rounded-md border border-red-100 uppercase">{highIssues} High</span>
+                             )}
+                             {mediumIssues > 0 && (highIssues === 0) && (
+                               <span className="px-2 py-1 bg-yellow-50 text-yellow-600 text-[10px] font-black rounded-md border border-yellow-100 uppercase">{mediumIssues} Med</span>
+                             )}
+                          </div>
+                          <button 
+                            onClick={(e) => handleDelete(e, d.id)}
+                            className="p-2 text-neutral-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                        </div>
                     </div>
 
