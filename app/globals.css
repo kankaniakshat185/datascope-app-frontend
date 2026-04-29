@@ -15,6 +15,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
+@layer base {
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    body {
+      background: white !important;
+      color: black !important;
+    }
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

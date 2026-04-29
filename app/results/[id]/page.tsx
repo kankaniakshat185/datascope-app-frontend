@@ -3,7 +3,7 @@
 import { useEffect, useState, ReactNode, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
-import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles, GitBranch, LogOut } from "lucide-react";
+import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles, GitBranch, LogOut, FileDown } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label } from "recharts";
 
 type Issue = {
@@ -401,9 +401,53 @@ export default function ResultsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-100 text-black font-sans">
+    <div className="min-h-screen bg-white text-black font-sans">
+      {/* Print-only Report Header */}
+      <div className="hidden print:block p-10 space-y-8 bg-white min-h-screen">
+          <div className="flex justify-between items-start border-b-2 border-black pb-8">
+              <div>
+                  <h1 className="text-4xl font-black uppercase tracking-tighter mb-2">DataScope Intelligence Report</h1>
+                  <p className="text-neutral-500 font-bold uppercase tracking-widest text-xs italic">Confidential Data Audit • {new Date().toLocaleDateString()}</p>
+              </div>
+              <div className="text-right">
+                  <p className="text-sm font-black uppercase tracking-widest text-neutral-400">Dataset Source</p>
+                  <p className="text-xl font-bold">{data.fileName}</p>
+              </div>
+          </div>
+
+          <div className="space-y-6">
+              <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+                  <AlertCircle className="w-6 h-6 text-red-500" />
+                  Detected Data Issues
+              </h2>
+              <div className="grid grid-cols-1 gap-6">
+                  {actualIssues.map((issue: Issue) => (
+                      <div key={issue.id} className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 break-inside-avoid">
+                          <div className="flex justify-between items-start mb-4">
+                              <h3 className="text-lg font-bold">{issue.issueType.replace(/_/g, ' ')}</h3>
+                              <span className={`px-2 py-1 text-[10px] font-black rounded border ${
+                                  issue.severity === 'HIGH' ? 'bg-red-50 text-red-600 border-red-100' :
+                                  issue.severity === 'MEDIUM' ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
+                                  'bg-emerald-50 text-emerald-600 border-emerald-100'
+                              }`}>{issue.severity}</span>
+                          </div>
+                          <p className="text-sm text-neutral-600 mb-4 font-medium leading-relaxed">{issue.description}</p>
+                          <div className="p-3 bg-white border border-neutral-100 rounded-lg">
+                              <p className="text-[10px] font-black uppercase text-neutral-400 mb-1">Recommended Remediation</p>
+                              <p className="text-xs font-bold text-neutral-800">{issue.suggestion}</p>
+                          </div>
+                      </div>
+                  ))}
+              </div>
+          </div>
+
+          <div className="pt-20 text-center border-t border-neutral-100">
+              <p className="text-[10px] font-black text-neutral-300 uppercase tracking-[0.5em]">End of Report • DataScope Engine</p>
+          </div>
+      </div>
+
       {/* Header */}
-      <header className="flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-[100] shadow-sm">
+      <header className="no-print flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center cursor-pointer group" onClick={() => router.push("/")}>
           <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter group-hover:text-blue-600 transition-colors">DataScope</h1>
         </div>
@@ -426,19 +470,26 @@ export default function ResultsPage() {
         </div>
       </header>
 
-      <div className="w-full flex justify-end px-8 pt-4">
+      <div className="no-print w-full flex justify-between items-center px-8 pt-4">
           <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
               <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.25em]">
                   Analyzing: <span className="text-black font-black">{data.fileName}</span>
               </span>
           </div>
+          <button 
+              onClick={() => window.print()}
+              className="no-print flex items-center gap-2 px-5 py-2.5 text-black hover:text-blue-600 transition-all active:scale-95 group"
+          >
+              <FileDown className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
+              <span className="text-xs font-black uppercase tracking-widest">Download Report</span>
+          </button>
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto p-12 pt-0">
-        <div className="flex flex-wrap gap-4 justify-center mb-16">
-            <h2 className="text-4xl font-extrabold mb-4 tracking-tight text-neutral-900">Your dataset determines your model’s performance.</h2>
+      <main className="no-print max-w-7xl mx-auto p-12 pt-0">
+        <div className="flex flex-wrap gap-4 justify-center mb-16 text-center">
+            <h2 className="text-4xl font-extrabold mb-4 tracking-tight text-neutral-900 w-full">Your dataset determines your model’s performance.</h2>
             <p className="text-lg max-w-3xl mx-auto mb-6 text-neutral-600 leading-relaxed">
                 Use the interactive tabs below to diagnose critical quality issues, explore feature distributions, and apply automated remediations to prepare your data for production-grade machine learning.
             </p>
@@ -498,11 +549,11 @@ export default function ResultsPage() {
         </div>
 
         {activeTab === 'dictionary' && dataDictResult && dataDictResult.rawJson && (
-          <div className="bg-white rounded-[1.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 transition hover:shadow-2xl">
+          <div className="p-12 pt-0 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 transition">
                 <div className="text-center mb-10">
                     <Database className="w-16 h-16 text-blue-500 mx-auto mb-6" />
                     <h3 className="text-3xl font-bold mb-4">Data Dictionary</h3>
-                    <p className="text-lg text-neutral-600 mb-6 leading-relaxed w-full">
+                    <p className="text-lg text-neutral-600 max-w-2xl mx-auto mb-6 leading-relaxed w-full">
                         <RichText content="The Data Dictionary provides a comprehensive overview of your dataset's structure. It highlights data types, detects missing values, and calculates key statistics for every column, helping you understand the shape and quality of your raw data at a glance." />
                     </p>
                 </div>
@@ -555,12 +606,11 @@ export default function ResultsPage() {
         )}
 
         {activeTab === 'eda' && edaData && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="bg-white rounded-[1.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden transition hover:shadow-2xl">
+          <div className="p-12 pt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="text-center mb-16">
                    <BarChart3 className="w-16 h-16 text-blue-500 mx-auto mb-6" />
                    <h3 className="text-3xl font-bold mb-4">EDA Dashboard</h3>
-                   <p className="text-lg text-neutral-600 mb-2 leading-relaxed w-full max-w-4xl mx-auto">
+                   <p className="text-lg text-neutral-600 mb-2 leading-relaxed w-full max-w-2xl mx-auto">
                       <RichText content="Exploratory Data Analysis (EDA) visualizes the distributions and relationships within your data. Use these charts to identify patterns, skewness, and category frequencies, ensuring your features are well-distributed for model training." />
                    </p>
                 </div>
@@ -634,18 +684,17 @@ export default function ResultsPage() {
                    </div>
                 )}
              </div>
-          </div>
         )}
 
         {activeTab === 'remediation' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="bg-white rounded-[1.5rem] p-12 shadow-xl relative overflow-hidden border border-neutral-200 transition hover:shadow-2xl">
+             <div className="p-12 pt-0 relative overflow-hidden transition">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/5 rounded-full blur-3xl"></div>
                 <div className="relative z-10 text-neutral-900 w-full">
                     <div className="text-center mb-10">
                         <Sparkles className="w-16 h-16 text-green-600 mx-auto mb-6" />
                         <h3 className="text-3xl font-bold mb-4">One-Click Remediation</h3>
-                        <p className="text-neutral-600 text-lg mb-8 w-full leading-relaxed">
+                        <p className="text-neutral-600 text-lg max-w-2xl mx-auto mb-8 w-full leading-relaxed">
                             <RichText content="The DataScope Engine will automatically clean your dataset based on the issues found during analysis. Applying these smart remediations will immediately improve data quality and model stability." />
                         </p>
                     </div>
@@ -708,11 +757,11 @@ export default function ResultsPage() {
         {activeTab === 'issues' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Card */}
-            <div className="bg-white rounded-[1.5rem] p-12 border border-neutral-200 shadow-xl transition hover:shadow-2xl mb-12">
+            <div className="pt-0 pb-12 mb-12">
                 <div className="text-center mb-16">
                     <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
                     <h3 className="text-3xl font-bold mb-4">Detected Dataset Issues</h3>
-                    <p className="text-lg text-neutral-600 max-w-4xl mx-auto leading-relaxed">
+                    <p className="text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
                         <RichText content="We found critical issues that may impact your model's predictive performance. Applying the suggested fixes will demonstrably improve your baseline model stability." />
                     </p>
                 </div>
@@ -730,21 +779,21 @@ export default function ResultsPage() {
                                 </p>
                             </div>
                             
-                            <div className="space-y-3 max-w-4xl mx-auto">
+                            <div className="space-y-4 max-w-4xl mx-auto">
                                 {shapData.features.slice(0, 10).map((feature: string, idx: number) => {
                                     const maxVal = Math.max(...shapData.importance);
                                     const width = Math.max(5, (shapData.importance[idx] / maxVal) * 100);
                                     
                                     return (
-                                        <div key={feature} className="flex items-center gap-4">
-                                            <span className="w-40 text-xs font-mono truncate text-neutral-600 text-right">{feature}</span>
-                                            <div className="flex-1 h-3 bg-neutral-100 rounded-full overflow-hidden border border-neutral-200 shadow-inner">
+                                        <div key={feature} className="flex items-center gap-6">
+                                            <span className="w-48 text-sm font-bold truncate text-neutral-700 text-right tracking-tight">{feature}</span>
+                                            <div className="flex-1 h-4 bg-neutral-100 rounded-full overflow-hidden border border-neutral-200 shadow-inner">
                                                 <div 
                                                     className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-blue-500'}`} 
                                                     style={{ width: `${width}%` }}
                                                 ></div>
                                             </div>
-                                            <span className="w-12 text-xs text-neutral-500">{(shapData.importance[idx] * 100).toFixed(1)}</span>
+                                            <span className="w-16 text-sm font-bold text-neutral-500">{(shapData.importance[idx] * 100).toFixed(1)}%</span>
                                         </div>
                                     )
                                 })}
@@ -816,14 +865,12 @@ export default function ResultsPage() {
 
         {activeTab === 'drift' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-white rounded-[1.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden relative transition hover:shadow-2xl">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full blur-3xl"></div>
-                
+            <div className="p-12 pt-0">
                 <div className="relative z-10 w-full mx-auto">
                     <div className="text-center mb-10">
                         <GitBranch className="w-16 h-16 text-red-500 mx-auto mb-6" />
                         <h3 className="text-3xl font-bold mb-4 text-neutral-900">Data Drift Detection</h3>
-                        <p className="text-lg text-neutral-600 w-full leading-relaxed">
+                        <p className="text-lg text-neutral-600 w-full max-w-2xl mx-auto leading-relaxed">
                             <RichText content="Upload your Test or Production dataset to compare against this Training dataset. We use the Population Stability Index (PSI) to instantly detect if your feature distributions have drifted and are threatening model performance." />
                         </p>
                     </div>
