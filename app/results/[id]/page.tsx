@@ -2,7 +2,8 @@
 
 import { useEffect, useState, ReactNode, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles, GitBranch } from "lucide-react";
+import { authClient } from "../../../lib/auth-client";
+import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles, GitBranch, LogOut } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 type Issue = {
@@ -186,6 +187,36 @@ const GLOSSARY = [
     term: "Cross-Validation",
     url: "https://www.geeksforgeeks.org/cross-validation-machine-learning/",
     tooltip: "A resampling procedure used to evaluate machine learning models on a limited data sample."
+  },
+  {
+    regex: /\b(psi|population stability index)\b/i,
+    term: "PSI",
+    url: "https://www.geeksforgeeks.org/data-science/population-stability-index-psi/",
+    tooltip: "Population Stability Index: measures how much the distribution of a variable has shifted between two datasets."
+  },
+  {
+    regex: /\b(shap|shapley additive explanations)\b/i,
+    term: "SHAP",
+    url: "https://www.geeksforgeeks.org/interpretable-machine-learning-using-shap-values-in-python/",
+    tooltip: "SHAP Values: a game theoretic approach to explain the output of any machine learning model."
+  },
+  {
+    regex: /\b(eda|exploratory data analysis)\b/i,
+    term: "EDA",
+    url: "https://www.geeksforgeeks.org/exploratory-data-analysis-in-python/",
+    tooltip: "EDA is the process of analyzing datasets to summarize their main characteristics, often with visual methods."
+  },
+  {
+    regex: /\b(data drift|drift detection|drifted)\b/i,
+    term: "Data Drift",
+    url: "https://www.geeksforgeeks.org/data-drift-in-machine-learning/",
+    tooltip: "Data Drift refers to the change in the distribution of data over time, which can degrade model performance."
+  },
+  {
+    regex: /\b(random forest)\b/i,
+    term: "Random Forest",
+    url: "https://www.geeksforgeeks.org/random-forest-regression-in-python/",
+    tooltip: "An ensemble learning method that operates by constructing a multitude of decision trees."
   }
 ];
 
@@ -240,6 +271,7 @@ const RichText = ({ content }: { content: string }) => {
 export default function ResultsPage() {
   const params = useParams();
   const router = useRouter();
+  const { data: session } = authClient.useSession();
   const [data, setData] = useState<DatasetResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'issues' | 'dictionary' | 'eda' | 'remediation' | 'drift'>('issues');
@@ -359,30 +391,42 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen bg-neutral-100 text-black font-sans">
       {/* Header */}
-      <header className="flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-10">
+      <header className="flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.push("/")} className="text-neutral-800 hover:text-black transition flex items-center justify-center bg-white/50 p-1.5 rounded-md hover:bg-white/80">
+          <button onClick={() => router.push("/")} className="text-neutral-800 hover:text-black transition flex items-center justify-center bg-white/50 p-1.5 rounded-md hover:bg-white/80 border border-black/5 shadow-sm">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
         </div>
-        <div className="text-sm font-semibold text-black bg-white/50 px-4 py-1.5 rounded-lg border border-black/10 shadow-sm">
-          Analyzing: <span className="font-bold">{data.fileName}</span>
+        <div className="flex items-center gap-6">
+          <div className="text-sm font-semibold text-black bg-white/50 px-4 py-1.5 rounded-lg border border-black/10 shadow-sm">
+            Analyzing: <span className="font-bold">{data.fileName}</span>
+          </div>
+          {session && (
+            <div className="flex items-center gap-4 border-l border-black/10 pl-6">
+              <span className="text-base font-extrabold text-black/80 tracking-tight">{session.user.name || session.user.email}</span>
+              <button 
+                className="text-xs font-bold bg-neutral-900 text-white px-4 py-2 rounded-lg hover:bg-neutral-800 transition-all shadow-md flex items-center gap-2" 
+                onClick={() => authClient.signOut()}
+              >
+                <LogOut className="w-3 h-3" />
+                LOG OUT
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-6 py-12">
         <div className="mb-10 text-center">
-            <h2 className="text-4xl font-extrabold mb-4 tracking-tight">Your dataset determines your model’s performance.</h2>
-            <p className="text-lg max-w-2xl mx-auto mb-6 text-neutral-600">
-                We found <span className="text-red-500 font-bold">{actualIssues.length}</span> critical issues. 
-                Applying the suggested fixes will demonstrably improve your baseline model. Click on the suggested issues for implementation guides!
+            <h2 className="text-4xl font-extrabold mb-4 tracking-tight text-neutral-900">Your dataset determines your model’s performance.</h2>
+            <p className="text-lg max-w-3xl mx-auto mb-6 text-neutral-600 leading-relaxed">
+                Use the interactive tabs below to diagnose critical quality issues, explore feature distributions, and apply automated remediations to prepare your data for production-grade machine learning.
             </p>
-            
-            <div className="flex justify-center mt-4">
-                <input type="file" ref={fileInputRef} className="hidden" onChange={handleClean} accept=".csv,.xlsx,.xls,.json,.parquet" />
-            </div>
+        </div>
+        <div className="hidden">
+            <input type="file" ref={fileInputRef} className="hidden" onChange={handleClean} accept=".csv,.xlsx,.xls,.json,.parquet" />
         </div>
 
         <div className="flex justify-center mb-10">
@@ -416,7 +460,7 @@ export default function ResultsPage() {
             </button>
             <button 
               onClick={() => setActiveTab('remediation')}
-              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'remediation' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
+              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'remediation' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
             >
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4" />
@@ -425,7 +469,7 @@ export default function ResultsPage() {
             </button>
             <button 
               onClick={() => setActiveTab('drift')}
-              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'drift' ? 'bg-gradient-to-r from-red-500 to-orange-600 text-white shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
+              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'drift' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
             >
               <div className="flex items-center gap-2">
                 <GitBranch className="w-4 h-4" />
@@ -436,17 +480,20 @@ export default function ResultsPage() {
         </div>
 
         {activeTab === 'dictionary' && dataDictResult && dataDictResult.rawJson && (
-          <div className="bg-white rounded-3xl p-8 border border-neutral-200 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="flex items-center gap-3 mb-6">
-                <Database className="w-8 h-8 text-blue-500" />
-                <h3 className="text-2xl font-bold">Data Dictionary</h3>
-             </div>
-             <div className="flex gap-4 mb-6">
-                <div className="bg-blue-50 text-blue-800 px-4 py-2 rounded-xl border border-blue-200 shadow-sm">
-                   <span className="font-bold">{dataDictResult.rawJson.total_rows}</span> Rows
+          <div className="bg-white rounded-[2.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 transition hover:shadow-2xl">
+                <div className="text-center mb-10">
+                    <Database className="w-16 h-16 text-blue-500 mx-auto mb-6" />
+                    <h3 className="text-3xl font-bold mb-4">Data Dictionary</h3>
+                    <p className="text-lg text-neutral-600 mb-6 leading-relaxed w-full">
+                        <RichText content="The Data Dictionary provides a comprehensive overview of your dataset's structure. It highlights data types, detects missing values, and calculates key statistics for every column, helping you understand the shape and quality of your raw data at a glance." />
+                    </p>
                 </div>
-                <div className="bg-purple-50 text-purple-800 px-4 py-2 rounded-xl border border-purple-200 shadow-sm">
-                   <span className="font-bold">{dataDictResult.rawJson.total_columns}</span> Columns
+             <div className="flex gap-4 mb-8 justify-center">
+                <div className="bg-blue-50 text-blue-800 px-6 py-2.5 rounded-2xl border border-blue-200 shadow-sm font-semibold">
+                   <span className="font-bold text-xl mr-2">{dataDictResult.rawJson.total_rows}</span> Rows
+                </div>
+                <div className="bg-purple-50 text-purple-800 px-6 py-2.5 rounded-2xl border border-purple-200 shadow-sm font-semibold">
+                   <span className="font-bold text-xl mr-2">{dataDictResult.rawJson.total_columns}</span> Columns
                 </div>
              </div>
              
@@ -490,153 +537,182 @@ export default function ResultsPage() {
         )}
 
         {activeTab === 'eda' && edaData && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {edaData.distributions && Object.keys(edaData.distributions).length > 0 && (
-                <div className="bg-white rounded-3xl p-8 border border-neutral-200 shadow-xl overflow-hidden">
-                   <h3 className="text-2xl font-bold mb-6 flex items-center gap-2"><BarChart3 className="w-6 h-6 text-blue-500"/> Numeric Distributions</h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {Object.entries(edaData.distributions).map(([col, data]: [string, any]) => {
-                          const chartData = data.labels.map((lbl: string, i: number) => ({
-                              name: lbl,
-                              count: data.counts[i]
-                          }));
-                          return (
-                              <div key={col} className="bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
-                                 <h4 className="font-semibold text-center mb-4 text-neutral-700">{col}</h4>
-                                 <div className="h-64">
-                                     <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={chartData}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                                            <XAxis dataKey="name" fontSize={10} tickMargin={10} axisLine={false} tickLine={false} />
-                                            <YAxis fontSize={10} axisLine={false} tickLine={false} />
-                                            <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
-                                            <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                                        </BarChart>
-                                     </ResponsiveContainer>
-                                 </div>
-                              </div>
-                          );
-                      })}
-                   </div>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+             <div className="bg-white rounded-[2.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden transition hover:shadow-2xl">
+                <div className="text-center mb-16">
+                   <BarChart3 className="w-16 h-16 text-blue-500 mx-auto mb-6" />
+                   <h3 className="text-3xl font-bold mb-4">EDA Dashboard</h3>
+                   <p className="text-lg text-neutral-600 mb-2 leading-relaxed w-full max-w-4xl mx-auto">
+                      <RichText content="Exploratory Data Analysis (EDA) visualizes the distributions and relationships within your data. Use these charts to identify patterns, skewness, and category frequencies, ensuring your features are well-distributed for model training." />
+                   </p>
                 </div>
-            )}
 
-            {edaData.value_counts && Object.keys(edaData.value_counts).length > 0 && (
-                <div className="bg-white rounded-3xl p-8 border border-neutral-200 shadow-xl overflow-hidden">
-                   <h3 className="text-2xl font-bold mb-6 flex items-center gap-2"><BarChart3 className="w-6 h-6 text-purple-500"/> Top Categories</h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {Object.entries(edaData.value_counts).map(([col, data]: [string, any]) => {
-                          const chartData = data.labels.map((lbl: string, i: number) => ({
-                              name: lbl.length > 15 ? lbl.substring(0,15)+"..." : lbl,
-                              count: data.counts[i],
-                              fullName: lbl
-                          }));
-                          return (
-                              <div key={col} className="bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
-                                 <h4 className="font-semibold text-center mb-4 text-neutral-700">{col}</h4>
-                                 <div className="h-64">
-                                     <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={chartData} layout="vertical" margin={{ left: 40 }}>
-                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                                            <XAxis type="number" fontSize={10} axisLine={false} tickLine={false} />
-                                            <YAxis dataKey="name" type="category" fontSize={10} axisLine={false} tickLine={false} />
-                                            <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
-                                            <Bar dataKey="count" fill="#a855f7" radius={[0, 4, 4, 0]} />
-                                        </BarChart>
-                                     </ResponsiveContainer>
-                                 </div>
-                              </div>
-                          );
-                      })}
+                {edaData.distributions && Object.keys(edaData.distributions).length > 0 && (
+                   <div className="mb-16">
+                      <h4 className="text-xl font-bold mb-8 text-neutral-800 border-b pb-4">Numeric Distributions</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {Object.entries(edaData.distributions).map(([col, data]: [string, any]) => {
+                            const chartData = data.labels.map((lbl: string, i: number) => ({
+                                name: lbl,
+                                count: data.counts[i]
+                            }));
+                            return (
+                                <div key={col} className="bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
+                                   <h4 className="font-semibold text-center mb-4 text-neutral-700">{col}</h4>
+                                   <div className="h-64">
+                                       <ResponsiveContainer width="100%" height="100%">
+                                          <BarChart data={chartData}>
+                                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                              <XAxis dataKey="name" fontSize={10} tickMargin={10} axisLine={false} tickLine={false} />
+                                              <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                                              <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                                              <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                          </BarChart>
+                                       </ResponsiveContainer>
+                                   </div>
+                                </div>
+                            );
+                        })}
+                      </div>
                    </div>
-                </div>
-            )}
+                )}
+
+                {edaData.value_counts && Object.keys(edaData.value_counts).length > 0 && (
+                   <div className="mt-16">
+                      <h3 className="text-2xl font-bold mb-8 flex items-center gap-3 border-b pb-4"><BarChart3 className="w-7 h-7 text-blue-400"/> Top Categories</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {Object.entries(edaData.value_counts).map(([col, data]: [string, any]) => {
+                            const chartData = data.labels.map((lbl: string, i: number) => ({
+                                name: lbl.length > 15 ? lbl.substring(0,15)+"..." : lbl,
+                                count: data.counts[i],
+                                fullName: lbl
+                            }));
+                            return (
+                                <div key={col} className="bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
+                                   <h4 className="font-semibold text-center mb-4 text-neutral-700">{col}</h4>
+                                   <div className="h-64">
+                                       <ResponsiveContainer width="100%" height="100%">
+                                          <BarChart data={chartData} layout="vertical" margin={{ left: 40 }}>
+                                              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+                                              <XAxis type="number" fontSize={10} axisLine={false} tickLine={false} />
+                                              <YAxis dataKey="name" type="category" fontSize={10} axisLine={false} tickLine={false} />
+                                              <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                                              <Bar dataKey="count" fill="#60a5fa" radius={[0, 4, 4, 0]} />
+                                          </BarChart>
+                                       </ResponsiveContainer>
+                                   </div>
+                                </div>
+                            );
+                        })}
+                      </div>
+                   </div>
+                )}
+             </div>
           </div>
         )}
 
         {activeTab === 'remediation' && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-gradient-to-br from-indigo-900 to-black rounded-3xl p-10 shadow-2xl relative overflow-hidden border border-indigo-500/30">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
-                <div className="relative z-10 text-white max-w-3xl mx-auto text-center">
-                    <Sparkles className="w-16 h-16 text-indigo-400 mx-auto mb-6" />
-                    <h3 className="text-3xl font-bold mb-4">One-Click Remediation</h3>
-                    <p className="text-neutral-300 text-lg mb-8">
-                        The DataScope Engine will automatically clean your dataset based on the issues found during analysis. 
-                        Here is exactly what we will do:
-                    </p>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-[2.5rem] p-12 shadow-xl relative overflow-hidden border border-neutral-200 transition hover:shadow-2xl">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/5 rounded-full blur-3xl"></div>
+                <div className="relative z-10 text-neutral-900 w-full">
+                    <div className="text-center mb-10">
+                        <Sparkles className="w-16 h-16 text-green-600 mx-auto mb-6" />
+                        <h3 className="text-3xl font-bold mb-4">One-Click Remediation</h3>
+                        <p className="text-neutral-600 text-lg mb-8 w-full leading-relaxed">
+                            <RichText content="The DataScope Engine will automatically clean your dataset based on the issues found during analysis. Applying these smart remediations will immediately improve data quality and model stability." />
+                        </p>
+                    </div>
                     
-                    <div className="text-left bg-black/40 p-6 rounded-2xl mb-10 space-y-4 border border-white/10">
-                        <div className="flex gap-4 items-start">
-                            <CheckCircle className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+                    <div className="text-left bg-neutral-50 p-8 rounded-[2rem] mb-10 space-y-6 border border-neutral-100 shadow-inner">
+                        <div className="flex gap-5 items-start">
+                            <div className="p-2 bg-white rounded-xl shadow-sm border border-neutral-100">
+                                <CheckCircle className="w-6 h-6 text-green-600" />
+                            </div>
                             <div>
-                                <h4 className="font-bold text-white text-lg">1. Drop Heavy Missing Values</h4>
-                                <p className="text-sm text-neutral-400">Any column missing more than 50% of its data will be completely dropped to prevent noise.</p>
+                                <h4 className="font-bold text-neutral-900 text-lg">1. Drop Heavy Missing Values</h4>
+                                <p className="text-sm text-neutral-500">Any column missing more than 50% of its data will be completely dropped to prevent noise.</p>
                             </div>
                         </div>
-                        <div className="flex gap-4 items-start">
-                            <CheckCircle className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+                        <div className="flex gap-5 items-start">
+                            <div className="p-2 bg-white rounded-xl shadow-sm border border-neutral-100">
+                                <CheckCircle className="w-6 h-6 text-green-600" />
+                            </div>
                             <div>
-                                <h4 className="font-bold text-white text-lg">2. Impute Remaining NaNs</h4>
-                                <p className="text-sm text-neutral-400">Missing numeric values will be filled with the column's <span className="font-mono text-xs bg-white/10 px-1 rounded">Median</span>. Missing text values will be filled with the column's <span className="font-mono text-xs bg-white/10 px-1 rounded">Mode</span>.</p>
+                                <h4 className="font-bold text-neutral-900 text-lg">2. Impute Remaining NaNs</h4>
+                                <p className="text-sm text-neutral-500">Missing numeric values will be filled with the column&apos;s <span className="font-mono text-xs bg-black/5 px-1 rounded font-bold text-green-700">Median</span>. Missing text values will be filled with the column&apos;s <span className="font-mono text-xs bg-black/5 px-1 rounded font-bold text-green-700">Mode</span>.</p>
                             </div>
                         </div>
-                        <div className="flex gap-4 items-start">
-                            <CheckCircle className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+                        <div className="flex gap-5 items-start">
+                            <div className="p-2 bg-white rounded-xl shadow-sm border border-neutral-100">
+                                <CheckCircle className="w-6 h-6 text-green-600" />
+                            </div>
                             <div>
-                                <h4 className="font-bold text-white text-lg">3. Cap Extreme Outliers</h4>
-                                <p className="text-sm text-neutral-400">We will statistically clip numeric columns at the 1st and 99th percentiles to destroy extreme noise without losing genuine data points.</p>
+                                <h4 className="font-bold text-neutral-900 text-lg">3. Cap Extreme Outliers</h4>
+                                <p className="text-sm text-neutral-500">We will statistically clip numeric columns at the 1st and 99th percentiles to destroy extreme noise without losing genuine data points.</p>
                             </div>
                         </div>
-                        <div className="flex gap-4 items-start">
-                            <CheckCircle className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+                        <div className="flex gap-5 items-start">
+                            <div className="p-2 bg-white rounded-xl shadow-sm border border-neutral-100">
+                                <CheckCircle className="w-6 h-6 text-green-600" />
+                            </div>
                             <div>
-                                <h4 className="font-bold text-white text-lg">4. Remove Duplicates</h4>
-                                <p className="text-sm text-neutral-400">Exact duplicate rows will be collapsed to ensure your model doesn't overfit on redundant data.</p>
+                                <h4 className="font-bold text-neutral-900 text-lg">4. Remove Duplicates</h4>
+                                <p className="text-sm text-neutral-500">Exact duplicate rows will be collapsed to ensure your model doesn&apos;t overfit on redundant data.</p>
                             </div>
                         </div>
                     </div>
 
-                    <button 
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={cleaning}
-                        className="inline-flex items-center gap-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-10 py-4 rounded-full font-bold text-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <Sparkles className="w-6 h-6" />
-                        {cleaning ? "Cleaning Dataset..." : "Select File & Clean"}
-                    </button>
-                    <p className="text-xs text-neutral-500 mt-4">We do not store your dataset. Please select the file again to clean it securely.</p>
+                    <div className="text-center">
+                        <button 
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={cleaning}
+                            className="inline-flex items-center gap-3 bg-neutral-900 hover:bg-neutral-800 text-white px-12 py-4 rounded-full font-bold text-xl shadow-xl transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Sparkles className="w-6 h-6" />
+                            {cleaning ? "Cleaning Dataset..." : "Select File & Clean"}
+                        </button>
+                        <p className="text-xs text-neutral-500 mt-4 font-medium uppercase tracking-widest">Secure local processing • No data storage</p>
+                    </div>
                 </div>
             </div>
           </div>
         )}
 
         {activeTab === 'issues' && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {shapData && shapData.features && shapData.features.length > 0 && (
-                <div className="bg-gradient-to-br from-neutral-900 to-black rounded-3xl p-8 shadow-2xl mb-8 relative overflow-hidden border border-neutral-800">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
-                    
-                    <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
-                        <div className="flex-1 text-white w-full">
-                            <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                                <Activity className="w-6 h-6 text-emerald-400" />
-                                Model Intelligence
-                            </h3>
-                            <p className="text-neutral-400 text-sm mb-6 max-w-2xl">
-                                Based on a SHAP analysis of a Random Forest trained to predict <span className="font-bold text-white bg-white/10 px-2 py-0.5 rounded">{shapData.target}</span>, these are the Top 10 most influential features driving your data's predictive power.
-                            </p>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Header Card */}
+            <div className="bg-white rounded-[2.5rem] p-12 border border-neutral-200 shadow-xl transition hover:shadow-2xl mb-12">
+                <div className="text-center mb-16">
+                    <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
+                    <h3 className="text-3xl font-bold mb-4">Detected Dataset Issues</h3>
+                    <p className="text-lg text-neutral-600 max-w-4xl mx-auto leading-relaxed">
+                        <RichText content="We found critical issues that may impact your model's predictive performance. Applying the suggested fixes will demonstrably improve your baseline model stability." />
+                    </p>
+                </div>
+
+                {shapData && shapData.features && shapData.features.length > 0 && (
+                    <div className="relative overflow-hidden bg-white border border-neutral-200 rounded-[2rem] p-10 shadow-lg transition hover:shadow-xl">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
+                        
+                        <div className="relative z-10">
+                            <div className="flex flex-col items-center text-center mb-8">
+                                <Activity className="w-12 h-12 text-emerald-600 mb-4" />
+                                <h3 className="text-2xl font-bold mb-2">Model Intelligence</h3>
+                                <p className="text-neutral-500 text-sm max-w-3xl leading-relaxed">
+                                    <RichText content={`Based on a SHAP analysis of a Random Forest trained to predict ${shapData.target}, these are the Top 10 most influential features driving your data's predictive power.`} />
+                                </p>
+                            </div>
                             
-                            <div className="space-y-3">
+                            <div className="space-y-3 max-w-4xl mx-auto">
                                 {shapData.features.slice(0, 10).map((feature: string, idx: number) => {
                                     const maxVal = Math.max(...shapData.importance);
                                     const width = Math.max(5, (shapData.importance[idx] / maxVal) * 100);
                                     
                                     return (
                                         <div key={feature} className="flex items-center gap-4">
-                                            <span className="w-32 text-xs font-mono truncate text-neutral-300 text-right">{feature}</span>
-                                            <div className="flex-1 h-3 bg-neutral-800 rounded-full overflow-hidden">
+                                            <span className="w-40 text-xs font-mono truncate text-neutral-600 text-right">{feature}</span>
+                                            <div className="flex-1 h-3 bg-neutral-100 rounded-full overflow-hidden border border-neutral-200 shadow-inner">
                                                 <div 
                                                     className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-blue-500'}`} 
                                                     style={{ width: `${width}%` }}
@@ -649,74 +725,75 @@ export default function ResultsPage() {
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-            
-            {actualIssues.map((issue) => (
-              <div key={issue.id} className={`p-6 rounded-2xl border ${severityBg[issue.severity]} backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition hover:-translate-y-1 hover:shadow-xl`}>
-                  
-                  {/* Left side: Icon & Details */}
-                  <div className="flex gap-5 items-start">
-                      <div className="pt-1">
-                          {severityIcon[issue.severity]}
-                      </div>
-                      <div>
-                          <div className="flex items-center gap-2 mb-2">
-                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${issue.severity === 'HIGH' ? 'bg-red-500/20 text-red-400' : issue.severity === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                                  {issue.severity} PRIORITY
-                              </span>
-                          </div>
-                          <h3 className="text-xl font-semibold mb-1"><RichText content={issue.description} /></h3>
-                          <p className="text-sm">→ Fix: <span className=" font-medium"><RichText content={issue.suggestion} /></span></p>
-                      </div>
-                  </div>
+                )}
+            </div>
 
-                  {/* Right side: Impact Metric */}
-                  <div className="flex flex-col gap-3 bg-white border p-4 rounded-xl shadow-inner min-w-[280px]">
-                      <div className={`text-center ${issue.rawJson?.metric ? 'pb-3 border-b border-neutral-200' : ''}`}>
-                          <div className="flex items-center justify-center gap-1.5 mb-1 text-emerald-400">
-                              <Activity className="w-4 h-4" />
-                              <span className="text-xs font-semibold tracking-wider uppercase">Projected Impact</span>
-                          </div>
-                          <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
-                              {issue.impactScore}
-                          </div>
-                          {issue.rawJson?.confidence_score !== undefined && (
-                              <div className="text-[10px] text-neutral-500 mt-1 uppercase tracking-widest">
-                                  Confidence: {issue.rawJson.confidence_score.toFixed(1)}%
-                              </div>
-                          )}
+            {/* Individual Issue Cards */}
+            <div className="space-y-6">
+                {actualIssues.map((issue) => (
+                    <div key={issue.id} className={`p-8 rounded-[2rem] border ${severityBg[issue.severity]} backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition hover:translate-x-1 hover:shadow-lg`}>
+              
+              {/* Left side: Icon & Details */}
+              <div className="flex gap-5 items-start">
+                  <div className="pt-1">
+                      {severityIcon[issue.severity]}
+                  </div>
+                  <div>
+                      <div className="flex items-center gap-2 mb-2">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${issue.severity === 'HIGH' ? 'bg-red-500/20 text-red-700' : issue.severity === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-700' : 'bg-blue-500/20 text-blue-700'}`}>
+                              {issue.severity} PRIORITY
+                          </span>
                       </div>
-                      {issue.rawJson?.metric && issue.rawJson?.baseline_score !== undefined && issue.rawJson?.after_score !== undefined && (
-                          <MetricChart baseline={issue.rawJson.baseline_score} after={issue.rawJson.after_score} metric={issue.rawJson.metric} />
+                      <h3 className="text-xl font-semibold mb-1 text-neutral-900"><RichText content={issue.description} /></h3>
+                      <p className="text-sm text-neutral-600">→ Fix: <span className=" font-medium text-neutral-800"><RichText content={issue.suggestion} /></span></p>
+                  </div>
+              </div>
+
+              {/* Right side: Impact Metric */}
+              <div className="flex flex-col gap-3 bg-white/60 border border-black/5 p-4 rounded-[1.5rem] shadow-sm min-w-[280px]">
+                  <div className={`text-center ${issue.rawJson?.metric ? 'pb-3 border-b border-black/5' : ''}`}>
+                      <div className="flex items-center justify-center gap-1.5 mb-1 text-emerald-600">
+                          <Activity className="w-4 h-4" />
+                          <span className="text-[10px] font-bold tracking-wider uppercase">Projected Impact</span>
+                      </div>
+                      <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
+                          {issue.impactScore}
+                      </div>
+                      {issue.rawJson?.confidence_score !== undefined && (
+                          <div className="text-[9px] text-neutral-500 mt-1 uppercase tracking-widest font-bold">
+                              Confidence: {issue.rawJson.confidence_score.toFixed(1)}%
+                          </div>
                       )}
                   </div>
-
+                  {issue.rawJson?.metric && issue.rawJson?.baseline_score !== undefined && issue.rawJson?.after_score !== undefined && (
+                      <MetricChart baseline={issue.rawJson.baseline_score} after={issue.rawJson.after_score} metric={issue.rawJson.metric} />
+                  )}
               </div>
-            ))}
+                  </div>
+                ))}
 
-            {actualIssues.length === 0 && (
-               <div className="text-center py-20 border border-neutral-800 rounded-3xl bg-neutral-900/30">
-                  <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold">Your dataset looks great!</h3>
-                  <p className="text-neutral-400 mt-2">No critical machine learning or structural issues found.</p>
-               </div>
-            )}
+                {actualIssues.length === 0 && (
+                   <div className="text-center py-20 border border-neutral-100 rounded-3xl bg-white shadow-xl">
+                      <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+                      <h3 className="text-2xl font-bold">Your dataset looks great!</h3>
+                      <p className="text-neutral-400 mt-2">No critical machine learning or structural issues found.</p>
+                   </div>
+                )}
+            </div>
           </div>
         )}
 
         {activeTab === 'drift' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-white rounded-3xl p-10 border border-neutral-200 shadow-xl overflow-hidden relative">
+            <div className="bg-white rounded-[2.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden relative transition hover:shadow-2xl">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full blur-3xl"></div>
                 
-                <div className="relative z-10 max-w-4xl mx-auto">
+                <div className="relative z-10 w-full mx-auto">
                     <div className="text-center mb-10">
-                        <GitBranch className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                        <GitBranch className="w-16 h-16 text-red-500 mx-auto mb-6" />
                         <h3 className="text-3xl font-bold mb-4 text-neutral-900">Data Drift Detection</h3>
-                        <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-                            Upload your Test or Production dataset to compare against this Training dataset. 
-                            We use the <strong>Population Stability Index (PSI)</strong> to instantly detect if your feature distributions have drifted and are threatening model performance.
+                        <p className="text-lg text-neutral-600 w-full leading-relaxed">
+                            <RichText content="Upload your Test or Production dataset to compare against this Training dataset. We use the Population Stability Index (PSI) to instantly detect if your feature distributions have drifted and are threatening model performance." />
                         </p>
                     </div>
 
@@ -725,7 +802,7 @@ export default function ResultsPage() {
                         <button 
                             onClick={() => driftInputRef.current?.click()}
                             disabled={driftLoading}
-                            className="inline-flex items-center gap-3 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-10 py-4 rounded-full font-bold text-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center gap-3 bg-neutral-900 hover:bg-neutral-800 text-white px-10 py-4 rounded-full font-bold text-xl shadow-xl transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <GitBranch className="w-6 h-6" />
                             {driftLoading ? "Analyzing Distributions..." : "Upload Test Dataset"}

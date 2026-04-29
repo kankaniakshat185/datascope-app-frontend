@@ -72,7 +72,7 @@ export default function Home() {
       </header>
 
       <div className="max-w-3xl mx-auto mt-32 px-6">
-        <h2 className="text-4xl font-bold mb-4 text-center text-neutral-900 tracking-tight">Intelligent Analysis</h2>
+        <h2 className="text-4xl font-bold mb-4 text-center text-neutral-900 tracking-tight">Intelligent Dataset Analysis</h2>
         <p className="text-neutral-500 mb-10 text-center text-base leading-relaxed max-w-lg mx-auto">Drop your dataset in to get instant diagnostics, insights, and automated fixes.</p>
 
         <div className="p-3 bg-white rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-neutral-100 flex items-center justify-between gap-4">
