@@ -4,7 +4,7 @@ import { useEffect, useState, ReactNode, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
 import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles, GitBranch, LogOut } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label } from "recharts";
 
 type Issue = {
   id: string;
@@ -197,7 +197,7 @@ const GLOSSARY = [
   {
     regex: /\b(shap|shapley additive explanations)\b/i,
     term: "SHAP",
-    url: "https://www.geeksforgeeks.org/interpretable-machine-learning-using-shap-values-in-python/",
+    url: "https://www.geeksforgeeks.org/machine-learning/shap-a-comprehensive-guide-to-shapley-additive-explanations/",
     tooltip: "SHAP Values: a game theoretic approach to explain the output of any machine learning model."
   },
   {
@@ -404,12 +404,12 @@ export default function ResultsPage() {
           </div>
           {session && (
             <div className="flex items-center gap-4 border-l border-black/10 pl-6">
-              <span className="text-base font-extrabold text-black/80 tracking-tight">{session.user.name || session.user.email}</span>
+              <span className="text-base font-extrabold text-black/80 tracking-tight uppercase">{(session.user.name || session.user.email).toUpperCase()}</span>
               <button 
                 className="text-xs font-bold bg-neutral-900 text-white px-4 py-2 rounded-lg hover:bg-neutral-800 transition-all shadow-md flex items-center gap-2" 
                 onClick={() => authClient.signOut()}
               >
-                <LogOut className="w-3 h-3" />
+                <LogOut className="w-4 h-4" />
                 LOG OUT
               </button>
             </div>
@@ -480,7 +480,7 @@ export default function ResultsPage() {
         </div>
 
         {activeTab === 'dictionary' && dataDictResult && dataDictResult.rawJson && (
-          <div className="bg-white rounded-[2.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 transition hover:shadow-2xl">
+          <div className="bg-white rounded-[1.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 transition hover:shadow-2xl">
                 <div className="text-center mb-10">
                     <Database className="w-16 h-16 text-blue-500 mx-auto mb-6" />
                     <h3 className="text-3xl font-bold mb-4">Data Dictionary</h3>
@@ -538,7 +538,7 @@ export default function ResultsPage() {
 
         {activeTab === 'eda' && edaData && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="bg-white rounded-[2.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden transition hover:shadow-2xl">
+             <div className="bg-white rounded-[1.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden transition hover:shadow-2xl">
                 <div className="text-center mb-16">
                    <BarChart3 className="w-16 h-16 text-blue-500 mx-auto mb-6" />
                    <h3 className="text-3xl font-bold mb-4">EDA Dashboard</h3>
@@ -557,14 +557,18 @@ export default function ResultsPage() {
                                 count: data.counts[i]
                             }));
                             return (
-                                <div key={col} className="bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
+                                <div key={col} className="bg-neutral-50 p-4 rounded-xl border border-neutral-100">
                                    <h4 className="font-semibold text-center mb-4 text-neutral-700">{col}</h4>
-                                   <div className="h-64">
+                                   <div className="h-72">
                                        <ResponsiveContainer width="100%" height="100%">
-                                          <BarChart data={chartData}>
+                                          <BarChart data={chartData} margin={{ bottom: 20, left: 10 }}>
                                               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                                              <XAxis dataKey="name" fontSize={10} tickMargin={10} axisLine={false} tickLine={false} />
-                                              <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                                              <XAxis dataKey="name" fontSize={10} tickMargin={10} axisLine={false} tickLine={false}>
+                                                 <Label value="Value Range (Bins)" offset={-10} position="insideBottom" fontSize={10} fill="#94a3b8" />
+                                              </XAxis>
+                                              <YAxis fontSize={10} axisLine={false} tickLine={false}>
+                                                 <Label value="Frequency" angle={-90} position="insideLeft" offset={-5} fontSize={10} fill="#94a3b8" />
+                                              </YAxis>
                                               <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
                                               <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                                           </BarChart>
@@ -588,14 +592,18 @@ export default function ResultsPage() {
                                 fullName: lbl
                             }));
                             return (
-                                <div key={col} className="bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
+                                <div key={col} className="bg-neutral-50 p-4 rounded-xl border border-neutral-100">
                                    <h4 className="font-semibold text-center mb-4 text-neutral-700">{col}</h4>
-                                   <div className="h-64">
+                                   <div className="h-72">
                                        <ResponsiveContainer width="100%" height="100%">
-                                          <BarChart data={chartData} layout="vertical" margin={{ left: 40 }}>
+                                          <BarChart data={chartData} layout="vertical" margin={{ left: 40, bottom: 20 }}>
                                               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                                              <XAxis type="number" fontSize={10} axisLine={false} tickLine={false} />
-                                              <YAxis dataKey="name" type="category" fontSize={10} axisLine={false} tickLine={false} />
+                                              <XAxis type="number" fontSize={10} axisLine={false} tickLine={false}>
+                                                 <Label value="Count" offset={-10} position="insideBottom" fontSize={10} fill="#94a3b8" />
+                                              </XAxis>
+                                              <YAxis dataKey="name" type="category" fontSize={10} axisLine={false} tickLine={false}>
+                                                 <Label value="Categories" angle={-90} position="insideLeft" offset={-35} fontSize={10} fill="#94a3b8" />
+                                              </YAxis>
                                               <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
                                               <Bar dataKey="count" fill="#60a5fa" radius={[0, 4, 4, 0]} />
                                           </BarChart>
@@ -613,7 +621,7 @@ export default function ResultsPage() {
 
         {activeTab === 'remediation' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-white rounded-[2.5rem] p-12 shadow-xl relative overflow-hidden border border-neutral-200 transition hover:shadow-2xl">
+             <div className="bg-white rounded-[1.5rem] p-12 shadow-xl relative overflow-hidden border border-neutral-200 transition hover:shadow-2xl">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/5 rounded-full blur-3xl"></div>
                 <div className="relative z-10 text-neutral-900 w-full">
                     <div className="text-center mb-10">
@@ -624,7 +632,7 @@ export default function ResultsPage() {
                         </p>
                     </div>
                     
-                    <div className="text-left bg-neutral-50 p-8 rounded-[2rem] mb-10 space-y-6 border border-neutral-100 shadow-inner">
+                    <div className="text-left bg-neutral-50 p-8 rounded-xl mb-10 space-y-6 border border-neutral-100 shadow-inner">
                         <div className="flex gap-5 items-start">
                             <div className="p-2 bg-white rounded-xl shadow-sm border border-neutral-100">
                                 <CheckCircle className="w-6 h-6 text-green-600" />
@@ -682,7 +690,7 @@ export default function ResultsPage() {
         {activeTab === 'issues' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Card */}
-            <div className="bg-white rounded-[2.5rem] p-12 border border-neutral-200 shadow-xl transition hover:shadow-2xl mb-12">
+            <div className="bg-white rounded-[1.5rem] p-12 border border-neutral-200 shadow-xl transition hover:shadow-2xl mb-12">
                 <div className="text-center mb-16">
                     <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
                     <h3 className="text-3xl font-bold mb-4">Detected Dataset Issues</h3>
@@ -692,7 +700,7 @@ export default function ResultsPage() {
                 </div>
 
                 {shapData && shapData.features && shapData.features.length > 0 && (
-                    <div className="relative overflow-hidden bg-white border border-neutral-200 rounded-[2rem] p-10 shadow-lg transition hover:shadow-xl">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200 rounded-xl p-10 shadow-lg transition hover:shadow-xl">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
                         
                         <div className="relative z-10">
@@ -730,8 +738,13 @@ export default function ResultsPage() {
 
             {/* Individual Issue Cards */}
             <div className="space-y-6">
-                {actualIssues.map((issue) => (
-                    <div key={issue.id} className={`p-8 rounded-[2rem] border ${severityBg[issue.severity]} backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition hover:translate-x-1 hover:shadow-lg`}>
+                {actualIssues
+                  .sort((a, b) => {
+                      const order: Record<string, number> = { 'HIGH': 0, 'MEDIUM': 1, 'LOW': 2 };
+                      return order[a.severity] - order[b.severity];
+                  })
+                  .map((issue) => (
+                    <div key={issue.id} className={`p-8 rounded-xl border ${severityBg[issue.severity]} backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition hover:translate-x-1 hover:shadow-lg`}>
               
               {/* Left side: Icon & Details */}
               <div className="flex gap-5 items-start">
@@ -750,7 +763,7 @@ export default function ResultsPage() {
               </div>
 
               {/* Right side: Impact Metric */}
-              <div className="flex flex-col gap-3 bg-white/60 border border-black/5 p-4 rounded-[1.5rem] shadow-sm min-w-[280px]">
+              <div className="flex flex-col gap-3 bg-white/60 border border-black/5 p-4 rounded-xl shadow-sm min-w-[280px]">
                   <div className={`text-center ${issue.rawJson?.metric ? 'pb-3 border-b border-black/5' : ''}`}>
                       <div className="flex items-center justify-center gap-1.5 mb-1 text-emerald-600">
                           <Activity className="w-4 h-4" />
@@ -785,7 +798,7 @@ export default function ResultsPage() {
 
         {activeTab === 'drift' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-white rounded-[2.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden relative transition hover:shadow-2xl">
+            <div className="bg-white rounded-[1.5rem] p-12 border border-neutral-200 shadow-xl overflow-hidden relative transition hover:shadow-2xl">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full blur-3xl"></div>
                 
                 <div className="relative z-10 w-full mx-auto">
@@ -851,6 +864,12 @@ export default function ResultsPage() {
           </div>
         )}
       </main>
+
+      <footer className="p-4 flex justify-end">
+         <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] opacity-80 hover:opacity-100 transition-opacity">
+            Developed by Akshat Kankani
+         </span>
+      </footer>
     </div>
   );
 }

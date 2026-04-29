@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { authClient } from "../lib/auth-client";
 import { useRouter } from "next/navigation";
-import { Settings2, ChevronDown, ChevronUp, UploadCloud, ArrowRight } from "lucide-react";
+import { Settings2, ChevronDown, ChevronUp, UploadCloud, LogOut, X } from "lucide-react";
 
 export default function Home() {
   const { data: session, isPending } = authClient.useSession();
@@ -14,24 +14,93 @@ export default function Home() {
   const [rulesJson, setRulesJson] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   if (isPending) return <div className="p-10 text-white min-h-screen bg-neutral-500">Loading...</div>;
 
+  const handleClearFile = () => {
+    setFile(null);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
+  };
+
   if (!session) {
     return (
-      <div className="flex flex-col items-center justify-center text-black min-h-screen bg-neutral-100 text-white">
-        <div className="p-8 bg-neutral-200 rounded-2xl shadow-2xl w-96 space-y-4">
-          <h1 className="text-4xl font-bold text-black text-center font-archivo uppercase tracking-tighter">DataScope</h1>
-          <p className="text-sm text-black">Login or Signup to continue</p>
-          <input className="w-full p-2.5 rounded-lg bg-neutral-300 text-black outline-none focus:border-blue-500" placeholder="Name (for signup)" value={name} onChange={e => setName(e.target.value)} />
-          <input className="w-full p-2.5 rounded-lg bg-neutral-300 text-black outline-none focus:border-blue-500" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-          <input className="w-full p-2.5 rounded-lg bg-neutral-300 text-black outline-none focus:border-blue-500" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
-          <div className="flex gap-2 pt-2">
-            <button className="flex-1 bg-green-600 hover:bg-green-500 text-sm font-medium p-2.5 rounded-lg transition-colors" onClick={() => authClient.signIn.email({ email, password })}>Login</button>
-            <button className="flex-1 bg-neutral-700 hover:bg-neutral-600 text-sm font-medium p-2.5 rounded-lg transition-colors" onClick={() => authClient.signUp.email({ email, password, name })}>Sign Up</button>
+      <div className="min-h-screen bg-neutral-200 text-black font-sans flex flex-col">
+        {/* Header */}
+        <header className="flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-[100] shadow-sm">
+          <div className="flex items-center">
+            <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
           </div>
-        </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em]">Authentication Required</span>
+          </div>
+        </header>
+
+        <main className="flex-1 flex items-center justify-center px-6">
+          <div className="w-full max-w-5xl bg-white rounded-[1.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-neutral-100 flex flex-col md:flex-row overflow-hidden animate-in fade-in zoom-in duration-700">
+            {/* Left Section: Context */}
+            <div className="flex-1 p-12 bg-neutral-900 text-white flex flex-col justify-center">
+                <div className="space-y-6">
+                    <h2 className="text-6xl font-extrabold tracking-tighter leading-tight">Access <br/>Intelligence</h2>
+                    <p className="text-neutral-400 text-lg leading-relaxed max-w-sm">Login or Sign Up to analyze and optimize your datasets with the DataScope engine.</p>
+                    <div className="flex items-center gap-3 pt-4">
+                        <div className="w-12 h-1 px-1 bg-blue-500 rounded-full"></div>
+                        <span className="text-xs font-bold uppercase tracking-widest text-neutral-500">v1.0 Production</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Section: Form */}
+            <div className="flex-1 p-12 flex flex-col justify-center bg-white">
+                <div className="space-y-6 max-w-sm mx-auto w-full">
+                    <div className="space-y-4">
+                        <input 
+                            className="w-full p-4 rounded-xl bg-neutral-50 text-black border border-neutral-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-neutral-400 text-sm font-bold" 
+                            placeholder="FULL NAME" 
+                            value={name} 
+                            onChange={e => setName(e.target.value)} 
+                        />
+                        <input 
+                            className="w-full p-4 rounded-xl bg-neutral-50 text-black border border-neutral-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-neutral-400 text-sm font-bold" 
+                            placeholder="EMAIL ADDRESS" 
+                            value={email} 
+                            onChange={e => setEmail(e.target.value)} 
+                        />
+                        <input 
+                            className="w-full p-4 rounded-xl bg-neutral-50 text-black border border-neutral-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-neutral-400 text-sm font-bold" 
+                            type="password" 
+                            placeholder="PASSWORD" 
+                            value={password} 
+                            onChange={e => setPassword(e.target.value)} 
+                        />
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        <button 
+                            className="w-full py-4 bg-neutral-900 hover:bg-neutral-800 text-white font-bold rounded-xl transition-all shadow-lg active:scale-[0.98] text-sm" 
+                            onClick={() => authClient.signIn.email({ email, password })}
+                        >
+                            LOG IN
+                        </button>
+                        <button 
+                            className="w-full py-4 bg-white border-2 border-neutral-200 hover:bg-neutral-50 text-neutral-900 font-bold rounded-xl transition-all active:scale-[0.98] text-sm" 
+                            onClick={() => authClient.signUp.email({ email, password, name })}
+                        >
+                            CREATE ACCOUNT
+                        </button>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </main>
+
+        <footer className="p-4 flex justify-end">
+           <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] opacity-80 hover:opacity-100 transition-opacity">
+              Developed by Akshat Kankani
+           </span>
+        </footer>
       </div>
     );
   }
@@ -60,42 +129,61 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-200 text-black font-sans">
-      <header className="flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-10">
+    <div className="min-h-screen bg-neutral-200 text-black font-sans flex flex-col">
+      <header className="flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center">
           <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-semibold">{session.user.email}</span>
-          <button className="text-sm font-semibold bg-neutral-800 text-white px-4 py-1.5 rounded-lg hover:bg-neutral-700 transition-colors shadow-sm" onClick={() => authClient.signOut()}>LOG OUT</button>
+        <div className="flex items-center gap-6">
+          <span className="text-base font-extrabold text-black/80 tracking-tight uppercase">{(session.user.name || session.user.email).toUpperCase()}</span>
+          <button className="text-xs font-bold bg-neutral-900 text-white px-5 py-2.5 rounded-xl hover:bg-neutral-800 transition-all shadow-md active:scale-95 flex items-center gap-2" onClick={() => authClient.signOut()}>
+            <LogOut className="w-4 h-4" />
+            LOG OUT
+          </button>
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto mt-32 px-6">
-        <h2 className="text-4xl font-bold mb-4 text-center text-neutral-900 tracking-tight">Intelligent Dataset Analysis</h2>
-        <p className="text-neutral-500 mb-10 text-center text-base leading-relaxed max-w-lg mx-auto">Drop your dataset in to get instant diagnostics, insights, and automated fixes.</p>
+      <main className="flex-1 max-w-3xl mx-auto mt-32 px-6">
+        <h2 className="text-5xl font-extrabold mb-4 text-center text-neutral-900 tracking-tight">Intelligent Dataset Analysis</h2>
+        <p className="text-neutral-500 mb-10 text-center text-lg leading-relaxed max-w-lg mx-auto">Drop your dataset in to get instant diagnostics, insights, and automated fixes.</p>
 
-        <div className="p-3 bg-white rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-neutral-100 flex items-center justify-between gap-4">
-          <div className="flex-1 flex items-center gap-3 border-2 border-dashed border-neutral-200 hover:border-blue-400 hover:bg-blue-50/50 transition-colors py-2 px-6 rounded-2xl group cursor-pointer relative overflow-hidden h-14">
-            <UploadCloud className="w-6 h-6 text-blue-500 shrink-0 group-hover:scale-110 transition-transform" />
+        <div className="p-4 bg-white rounded-[1.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-neutral-100 flex items-center justify-between gap-4">
+          <div className="flex-1 flex items-center gap-4 border-2 border-dashed border-neutral-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all py-2 px-8 rounded-xl group relative overflow-hidden h-16">
+            <UploadCloud className="w-8 h-8 text-blue-500 shrink-0 group-hover:scale-110 transition-transform" />
             <input
               type="file"
+              ref={fileInputRef}
               accept=".csv,.xlsx,.xls,.json,.parquet"
               id="file-input"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
-            <span className="text-sm font-semibold text-neutral-600 truncate z-0">
-              {file ? file.name : "Choose a dataset (CSV, JSON, Excel...)"}
-            </span>
+            <div className="flex-1 min-w-0 flex items-center justify-between z-20 pointer-events-none">
+                <span className="text-base font-bold text-neutral-600 truncate">
+                {file ? file.name : "Choose a dataset (CSV, JSON, Excel...)"}
+                </span>
+                {file && (
+                    <button 
+                        onClick={(e) => { 
+                            e.preventDefault();
+                            e.stopPropagation(); 
+                            handleClearFile(); 
+                        }}
+                        className="p-1 hover:bg-red-50 text-neutral-400 hover:text-red-500 transition-colors rounded-md pointer-events-auto"
+                        title="Remove file"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                )}
+            </div>
           </div>
 
           <button
             disabled={!file || uploading}
             onClick={handleUpload}
-            className="h-14 px-10 bg-neutral-900 text-white rounded-2xl font-bold text-sm tracking-wide hover:bg-neutral-800 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shrink-0"
+            className="h-16 px-12 bg-neutral-900 text-white rounded-xl font-bold text-base tracking-wide hover:bg-neutral-800 transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shrink-0 active:scale-95"
           >
-            {uploading ? "Analyzing..." : "Run Debugger"}
+            {uploading ? "Analyzing..." : "Analyze"}
           </button>
         </div>
 
@@ -110,7 +198,7 @@ export default function Home() {
             </button>
             
             {showAdvanced && (
-                <div className="mt-3 w-full p-8 bg-white border border-neutral-200 rounded-[2rem] shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="mt-3 w-full p-8 bg-white border border-neutral-200 rounded-[1.5rem] shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div>
                         <label className="text-sm font-bold text-neutral-700 flex justify-between items-center mb-1">
                             Custom Rules
@@ -124,12 +212,18 @@ export default function Home() {
                        value={rulesJson}
                        onChange={(e) => setRulesJson(e.target.value)}
                        placeholder={'[\n  { "column": "Age", "type": "min", "value": 0 },\n  { "column": "Status", "type": "in", "value": ["Active", "Inactive"] }\n]'}
-                       className="w-full h-32 p-4 text-sm font-mono text-neutral-800 bg-neutral-50 rounded-2xl border border-neutral-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all placeholder:text-neutral-400"
+                       className="w-full h-32 p-4 text-sm font-mono text-neutral-800 bg-neutral-50 rounded-xl border border-neutral-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all placeholder:text-neutral-400"
                     />
                 </div>
             )}
         </div>
-      </div>
+      </main>
+
+      <footer className="p-4 flex justify-end">
+         <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] opacity-80 hover:opacity-100 transition-opacity">
+            Developed by Akshat Kankani
+         </span>
+      </footer>
     </div>
   );
 }
