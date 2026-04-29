@@ -141,12 +141,17 @@ export default function Home() {
         <div className="flex items-center">
           <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
         </div>
-        <div className="flex items-center gap-6">
-          <span className="text-base font-extrabold text-black/80 tracking-tight uppercase">{(session.user.name || session.user.email).toUpperCase()}</span>
-          <button className="text-xs font-bold bg-neutral-900 text-white px-5 py-2.5 rounded-xl hover:bg-neutral-800 transition-all shadow-md active:scale-95 flex items-center gap-2" onClick={() => authClient.signOut()}>
-            <LogOut className="w-4 h-4" />
-            LOG OUT
-          </button>
+        <div className="flex items-center gap-8">
+          <nav className="flex items-center gap-6">
+             <button onClick={() => router.push("/")} className="text-sm font-bold text-black transition-colors uppercase tracking-widest">Analyzer</button>
+             <button onClick={() => router.push("/vault")} className="text-sm font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest">Vault</button>
+          </nav>
+          <div className="flex items-center gap-4">
+            <span className="text-base font-extrabold text-black/80 tracking-tight uppercase">{(session.user.name || session.user.email).toUpperCase()}</span>
+            <button className="text-sm font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest" onClick={() => authClient.signOut()}>
+              LOGOUT
+            </button>
+          </div>
         </div>
       </header>
 

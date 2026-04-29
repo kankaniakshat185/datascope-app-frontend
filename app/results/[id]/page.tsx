@@ -410,28 +410,37 @@ export default function ResultsPage() {
           </button>
           <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="text-sm font-semibold text-black bg-white/50 px-4 py-1.5 rounded-lg border border-black/10 shadow-sm">
-            Analyzing: <span className="font-bold">{data.fileName}</span>
-          </div>
+        <div className="flex items-center gap-8">
+          <nav className="flex items-center gap-6">
+             <button onClick={() => router.push("/")} className="text-sm font-bold text-black transition-colors uppercase tracking-widest">Analyzer</button>
+             <button onClick={() => router.push("/vault")} className="text-sm font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest">Vault</button>
+          </nav>
           {session && (
             <div className="flex items-center gap-4 border-l border-black/10 pl-6">
               <span className="text-base font-extrabold text-black/80 tracking-tight uppercase">{(session.user.name || session.user.email).toUpperCase()}</span>
               <button 
-                className="text-xs font-bold bg-neutral-900 text-white px-4 py-2 rounded-lg hover:bg-neutral-800 transition-all shadow-md flex items-center gap-2" 
+                className="text-sm font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest" 
                 onClick={() => authClient.signOut()}
               >
-                <LogOut className="w-4 h-4" />
-                LOG OUT
+                LOGOUT
               </button>
             </div>
           )}
         </div>
       </header>
 
+      <div className="w-full flex justify-end px-8 pt-4">
+          <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.25em]">
+                  Analyzing: <span className="text-black font-black">{data.fileName}</span>
+              </span>
+          </div>
+      </div>
+
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-12">
-        <div className="mb-10 text-center">
+      <main className="max-w-7xl mx-auto p-12 pt-0">
+        <div className="flex flex-wrap gap-4 justify-center mb-16">
             <h2 className="text-4xl font-extrabold mb-4 tracking-tight text-neutral-900">Your dataset determines your model’s performance.</h2>
             <p className="text-lg max-w-3xl mx-auto mb-6 text-neutral-600 leading-relaxed">
                 Use the interactive tabs below to diagnose critical quality issues, explore feature distributions, and apply automated remediations to prepare your data for production-grade machine learning.
@@ -571,15 +580,15 @@ export default function ResultsPage() {
                             return (
                                 <div key={col} className="bg-neutral-50 p-4 rounded-xl border border-neutral-100">
                                    <h4 className="font-semibold text-center mb-4 text-neutral-700">{col}</h4>
-                                   <div className="h-72">
+                                   <div className="h-80">
                                        <ResponsiveContainer width="100%" height="100%">
-                                          <BarChart data={chartData} margin={{ bottom: 20, left: 10 }}>
+                                          <BarChart data={chartData} margin={{ bottom: 35, left: 10, top: 10 }}>
                                               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                                              <XAxis dataKey="name" fontSize={10} tickMargin={10} axisLine={false} tickLine={false}>
-                                                 <Label value="Value Range (Bins)" offset={-10} position="insideBottom" fontSize={10} fill="#94a3b8" />
+                                              <XAxis dataKey="name" fontSize={11} tickMargin={10} axisLine={false} tickLine={false}>
+                                                 <Label value="Value Range (Bins)" offset={-25} position="insideBottom" fontSize={12} fill="#171717" fontStyle="italic" />
                                               </XAxis>
-                                              <YAxis fontSize={10} axisLine={false} tickLine={false}>
-                                                 <Label value="Frequency" angle={-90} position="insideLeft" offset={-5} fontSize={10} fill="#94a3b8" />
+                                              <YAxis fontSize={11} axisLine={false} tickLine={false}>
+                                                 <Label value="Frequency" angle={-90} position="insideLeft" offset={-5} fontSize={12} fill="#171717" fontStyle="italic" />
                                               </YAxis>
                                               <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
                                               <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
@@ -606,15 +615,15 @@ export default function ResultsPage() {
                             return (
                                 <div key={col} className="bg-neutral-50 p-4 rounded-xl border border-neutral-100">
                                    <h4 className="font-semibold text-center mb-4 text-neutral-700">{col}</h4>
-                                   <div className="h-72">
+                                   <div className="h-80">
                                        <ResponsiveContainer width="100%" height="100%">
-                                          <BarChart data={chartData} layout="vertical" margin={{ left: 40, bottom: 20 }}>
+                                          <BarChart data={chartData} layout="vertical" margin={{ left: 40, bottom: 35, top: 10 }}>
                                               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                                              <XAxis type="number" fontSize={10} axisLine={false} tickLine={false}>
-                                                 <Label value="Count" offset={-10} position="insideBottom" fontSize={10} fill="#94a3b8" />
+                                              <XAxis type="number" fontSize={11} axisLine={false} tickLine={false}>
+                                                 <Label value="Count" offset={-25} position="insideBottom" fontSize={12} fill="#171717" fontStyle="italic" />
                                               </XAxis>
-                                              <YAxis dataKey="name" type="category" fontSize={10} axisLine={false} tickLine={false}>
-                                                 <Label value="Categories" angle={-90} position="insideLeft" offset={-35} fontSize={10} fill="#94a3b8" />
+                                              <YAxis dataKey="name" type="category" fontSize={11} axisLine={false} tickLine={false}>
+                                                 <Label value="Categories" angle={-90} position="insideLeft" offset={-35} fontSize={12} fill="#171717" fontStyle="italic" />
                                               </YAxis>
                                               <Tooltip cursor={{fill: '#f3f4f6'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
                                               <Bar dataKey="count" fill="#60a5fa" radius={[0, 4, 4, 0]} />
