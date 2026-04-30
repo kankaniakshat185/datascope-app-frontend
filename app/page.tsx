@@ -14,6 +14,7 @@ export default function Home() {
   const [rulesJson, setRulesJson] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isLoginMode, setIsLoginMode] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -45,60 +46,63 @@ export default function Home() {
           <div className="flex items-center">
             <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter">DataScope</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em]">Authentication Required</span>
-          </div>
         </header>
 
         <main className="flex-1 flex items-center justify-center px-6">
-          <div className="w-full max-w-5xl bg-white rounded-[1.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-neutral-100 flex flex-col md:flex-row overflow-hidden animate-in fade-in zoom-in duration-700">
-            {/* Left Section: Context */}
-            <div className="flex-1 p-12 bg-neutral-900 text-white flex flex-col justify-center">
-                <div className="space-y-6">
-                    <h2 className="text-6xl font-extrabold tracking-tighter leading-tight">Access <br/>Intelligence</h2>
-                    <p className="text-neutral-400 text-lg leading-relaxed max-w-sm">Login or Sign Up to analyze and optimize your datasets with the DataScope engine.</p>
-                </div>
+          <div className="w-full max-w-md bg-blue-100 border-2 border-black rounded-none p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] animate-in fade-in zoom-in duration-500 relative overflow-hidden">
+            {/* Corner Accent */}
+            <div className="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-t-blue-500 border-l-[40px] border-l-transparent"></div>
+            
+            <div className="text-center mb-8">
+                <h2 className="text-4xl font-black uppercase tracking-tighter leading-none mb-2">
+                    {isLoginMode ? "Access Scope" : "Join Scope"}
+                </h2>
+                <p className="text-xs font-bold text-neutral-500 uppercase tracking-widest">
+                    {isLoginMode ? "Login to start analyzing" : "Signup to start analyzing"}
+                </p>
             </div>
 
-            {/* Right Section: Form */}
-            <div className="flex-1 p-12 flex flex-col justify-center bg-white">
-                <div className="space-y-6 max-w-sm mx-auto w-full">
-                    <div className="space-y-4">
-                        <input 
-                            className="w-full p-4 rounded-xl bg-neutral-50 text-black border border-neutral-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-neutral-400 text-sm font-bold" 
-                            placeholder="FULL NAME" 
-                            value={name} 
-                            onChange={e => setName(e.target.value)} 
-                        />
-                        <input 
-                            className="w-full p-4 rounded-xl bg-neutral-50 text-black border border-neutral-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-neutral-400 text-sm font-bold" 
-                            placeholder="EMAIL ADDRESS" 
-                            value={email} 
-                            onChange={e => setEmail(e.target.value)} 
-                        />
-                        <input 
-                            className="w-full p-4 rounded-xl bg-neutral-50 text-black border border-neutral-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-neutral-400 text-sm font-bold" 
-                            type="password" 
-                            placeholder="PASSWORD" 
-                            value={password} 
-                            onChange={e => setPassword(e.target.value)} 
-                        />
-                    </div>
-                    <div className="flex flex-col gap-3">
-                        <button 
-                            className="w-full py-4 bg-neutral-900 hover:bg-neutral-800 text-white font-bold rounded-xl transition-all shadow-lg active:scale-[0.98] text-sm" 
-                            onClick={() => authClient.signIn.email({ email, password })}
-                        >
-                            LOG IN
-                        </button>
-                        <button 
-                            className="w-full py-4 bg-white border-2 border-neutral-200 hover:bg-neutral-50 text-neutral-900 font-bold rounded-xl transition-all active:scale-[0.98] text-sm" 
-                            onClick={() => authClient.signUp.email({ email, password, name })}
-                        >
-                            CREATE ACCOUNT
-                        </button>
-                    </div>
-                </div>
+            <div className="space-y-4">
+                {!isLoginMode && (
+                    <input 
+                        className="w-full p-4 rounded-none bg-white/50 text-black border-2 border-black outline-none focus:bg-white transition-all placeholder:text-neutral-500 text-sm font-bold uppercase tracking-tight" 
+                        placeholder="Full Name" 
+                        value={name} 
+                        onChange={e => setName(e.target.value)} 
+                    />
+                )}
+                <input 
+                    className="w-full p-4 rounded-none bg-white/50 text-black border-2 border-black outline-none focus:bg-white transition-all placeholder:text-neutral-500 text-sm font-bold uppercase tracking-tight" 
+                    placeholder="Email Address" 
+                    value={email} 
+                    onChange={e => setEmail(e.target.value)} 
+                />
+                <input 
+                    className="w-full p-4 rounded-none bg-white/50 text-black border-2 border-black outline-none focus:bg-white transition-all placeholder:text-neutral-500 text-sm font-bold uppercase tracking-tight" 
+                    type="password" 
+                    placeholder="Password" 
+                    value={password} 
+                    onChange={e => setPassword(e.target.value)} 
+                />
+                
+                <button 
+                    className="w-full py-4 bg-black hover:bg-neutral-800 text-white font-black rounded-none transition-all active:scale-[0.98] text-sm uppercase tracking-[0.2em] shadow-lg" 
+                    onClick={() => isLoginMode ? authClient.signIn.email({ email, password }) : authClient.signUp.email({ email, password, name })}
+                >
+                    {isLoginMode ? "Login" : "Sign Up"}
+                </button>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-black/10 text-center">
+                <p className="text-xs font-bold text-neutral-500 uppercase tracking-widest">
+                    {isLoginMode ? "Need an account?" : "Already have an account?"}{" "}
+                    <button 
+                        onClick={() => setIsLoginMode(!isLoginMode)}
+                        className="text-black hover:underline underline-offset-4 decoration-2"
+                    >
+                        {isLoginMode ? "Sign up" : "Login"}
+                    </button>
+                </p>
             </div>
           </div>
         </main>
@@ -161,8 +165,8 @@ export default function Home() {
         <h2 className="text-5xl font-extrabold mb-4 text-center text-neutral-900 tracking-tight">Intelligent Dataset Analysis</h2>
         <p className="text-neutral-500 mb-10 text-center text-lg leading-relaxed max-w-lg mx-auto">Drop your dataset in to get instant diagnostics, insights, and automated fixes.</p>
 
-        <div className="p-4 bg-white rounded-[1.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-neutral-100 flex items-center justify-between gap-4">
-          <div className="flex-1 flex items-center gap-4 border-2 border-dashed border-neutral-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all py-2 px-8 rounded-xl group relative overflow-hidden h-16">
+        <div className="p-4 bg-white rounded-none shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border-2 border-black flex items-center justify-between gap-4">
+          <div className="flex-1 flex items-center gap-4 border-2 border-dashed border-neutral-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all py-2 px-8 rounded-none group relative overflow-hidden h-16">
             <UploadCloud className="w-8 h-8 text-blue-500 shrink-0 group-hover:scale-110 transition-transform" />
             <input
               type="file"
@@ -195,7 +199,7 @@ export default function Home() {
           <button
             disabled={!file || uploading}
             onClick={handleUpload}
-            className="h-16 px-12 bg-neutral-900 text-white rounded-xl font-bold text-base tracking-wide hover:bg-neutral-800 transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shrink-0 active:scale-95"
+            className="h-16 px-12 bg-neutral-900 text-white rounded-none font-bold text-base tracking-wide hover:bg-neutral-800 transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shrink-0 active:scale-95"
           >
             {uploading ? "Analyzing..." : "Analyze"}
           </button>
@@ -212,7 +216,7 @@ export default function Home() {
             </button>
             
             {showAdvanced && (
-                <div className="mt-3 w-full p-8 bg-white border border-neutral-200 rounded-[1.5rem] shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="mt-3 w-full p-8 bg-white border-2 border-black rounded-none shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div>
                         <label className="text-sm font-bold text-neutral-700 flex justify-between items-center mb-1">
                             Custom Rules
@@ -226,7 +230,7 @@ export default function Home() {
                        value={rulesJson}
                        onChange={(e) => setRulesJson(e.target.value)}
                        placeholder={'[\n  { "column": "Age", "type": "min", "value": 0 },\n  { "column": "Status", "type": "in", "value": ["Active", "Inactive"] }\n]'}
-                       className="w-full h-32 p-4 text-sm font-mono text-neutral-800 bg-neutral-50 rounded-xl border border-neutral-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all placeholder:text-neutral-400"
+                       className="w-full h-32 p-4 text-sm font-mono text-neutral-800 bg-neutral-50 rounded-none border border-neutral-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all placeholder:text-neutral-400"
                     />
                 </div>
             )}
