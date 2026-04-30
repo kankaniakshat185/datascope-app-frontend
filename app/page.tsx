@@ -49,9 +49,8 @@ export default function Home() {
         </header>
 
         <main className="flex-1 flex items-center justify-center px-6">
-          <div className="w-full max-w-md bg-blue-100 border-2 border-black rounded-none p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] animate-in fade-in zoom-in duration-500 relative overflow-hidden">
-            {/* Corner Accent */}
-            <div className="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-t-blue-500 border-l-[40px] border-l-transparent"></div>
+          <div className="w-full max-w-md bg-blue-100 border-2 border-black rounded-[2.5rem] p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1),inset_12px_12px_0px_0px_rgba(59,130,246,1)] animate-in fade-in zoom-in duration-500 relative overflow-hidden">
+            {/* The inset shadow above uses rgba for a subtle but distinct effect. I will make it solid if it looks better. */}
             
             <div className="text-center mb-8">
                 <h2 className="text-4xl font-black uppercase tracking-tighter leading-none mb-2">
@@ -162,11 +161,11 @@ export default function Home() {
       </header>
 
       <main className="flex-1 max-w-3xl mx-auto mt-32 px-6">
-        <h2 className="text-5xl font-extrabold mb-4 text-center text-neutral-900 tracking-tight">Intelligent Dataset Analysis</h2>
-        <p className="text-neutral-500 mb-10 text-center text-lg leading-relaxed max-w-lg mx-auto">Drop your dataset in to get instant diagnostics, insights, and automated fixes.</p>
+        <h2 className="text-5xl font-extrabold mb-4 text-center text-neutral-900 tracking-tight">See Beyond the Numbers</h2>
+        <p className="text-neutral-500 mb-10 text-center text-lg leading-relaxed max-w-lg mx-auto">Detect what’s broken, discover what matters, and refine what remains.</p>
 
-        <div className="p-4 bg-white rounded-none shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border-2 border-black flex items-center justify-between gap-4">
-          <div className="flex-1 flex items-center gap-4 border-2 border-dashed border-neutral-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all py-2 px-8 rounded-none group relative overflow-hidden h-16">
+        <div className="p-4 bg-white rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border-2 border-black flex items-center justify-between gap-4">
+          <div className="flex-1 flex items-center gap-4 border-2 border-dashed border-neutral-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all py-2 px-8 rounded-[1.5rem] group relative overflow-hidden h-16">
             <UploadCloud className="w-8 h-8 text-blue-500 shrink-0 group-hover:scale-110 transition-transform" />
             <input
               type="file"
@@ -199,7 +198,7 @@ export default function Home() {
           <button
             disabled={!file || uploading}
             onClick={handleUpload}
-            className="h-16 px-12 bg-neutral-900 text-white rounded-none font-bold text-base tracking-wide hover:bg-neutral-800 transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shrink-0 active:scale-95"
+            className="h-16 px-12 bg-neutral-900 text-white rounded-[2.5rem] font-bold text-base tracking-wide hover:bg-neutral-800 transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shrink-0 active:scale-95"
           >
             {uploading ? "Analyzing..." : "Analyze"}
           </button>
@@ -216,7 +215,7 @@ export default function Home() {
             </button>
             
             {showAdvanced && (
-                <div className="mt-3 w-full p-8 bg-white border-2 border-black rounded-none shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="mt-3 w-full p-8 bg-white border-2 border-black rounded-[2.5rem] shadow-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div>
                         <label className="text-sm font-bold text-neutral-700 flex justify-between items-center mb-1">
                             Custom Rules
@@ -230,7 +229,7 @@ export default function Home() {
                        value={rulesJson}
                        onChange={(e) => setRulesJson(e.target.value)}
                        placeholder={'[\n  { "column": "Age", "type": "min", "value": 0 },\n  { "column": "Status", "type": "in", "value": ["Active", "Inactive"] }\n]'}
-                       className="w-full h-32 p-4 text-sm font-mono text-neutral-800 bg-neutral-50 rounded-none border border-neutral-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all placeholder:text-neutral-400"
+                       className="w-full h-32 p-4 text-sm font-mono text-neutral-800 bg-neutral-50 rounded-[1.5rem] border border-neutral-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all placeholder:text-neutral-400"
                     />
                 </div>
             )}
