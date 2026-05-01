@@ -770,16 +770,7 @@ export default function ResultsPage() {
                                 <CheckCircle className="w-6 h-6 text-green-600" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-neutral-900 text-lg">1. Drop Heavy Missing Values</h4>
-                                <p className="text-sm text-neutral-500">Any column missing more than 50% of its data will be completely dropped to prevent noise.</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-5 items-start">
-                            <div className="p-2 bg-white rounded-xl shadow-sm border border-neutral-100">
-                                <CheckCircle className="w-6 h-6 text-green-600" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-neutral-900 text-lg">2. Impute Remaining NaNs</h4>
+                                <h4 className="font-bold text-neutral-900 text-lg">1. Advanced Median/Mode Imputation</h4>
                                 <p className="text-sm text-neutral-500">Missing numeric values will be filled with the column&apos;s <span className="font-mono text-xs bg-black/5 px-1 rounded font-bold text-green-700">Median</span>. Missing text values will be filled with the column&apos;s <span className="font-mono text-xs bg-black/5 px-1 rounded font-bold text-green-700">Mode</span>.</p>
                             </div>
                         </div>
@@ -788,17 +779,8 @@ export default function ResultsPage() {
                                 <CheckCircle className="w-6 h-6 text-green-600" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-neutral-900 text-lg">3. Cap Extreme Outliers</h4>
-                                <p className="text-sm text-neutral-500">We will statistically clip numeric columns at the 1st and 99th percentiles to destroy extreme noise without losing genuine data points.</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-5 items-start">
-                            <div className="p-2 bg-white rounded-xl shadow-sm border border-neutral-100">
-                                <CheckCircle className="w-6 h-6 text-green-600" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-neutral-900 text-lg">4. Remove Duplicates</h4>
-                                <p className="text-sm text-neutral-500">Exact duplicate rows will be collapsed to ensure your model doesn&apos;t overfit on redundant data.</p>
+                                <h4 className="font-bold text-neutral-900 text-lg">2. Multi-Method Outlier Destruction</h4>
+                                <p className="text-sm text-neutral-500">Instead of basic IQR capping, we use a sophisticated ensemble of Isolation Forest (40%), MAD (25%), DBSCAN (20%), and Z-Score (15%). Rows with a consensus score ≥ 60% are cleanly dropped to eradicate extreme noise.</p>
                             </div>
                         </div>
                     </div>
