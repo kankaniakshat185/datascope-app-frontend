@@ -279,24 +279,19 @@ export default function ResultsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [driftLoading, setDriftLoading] = useState(false);
   const [driftResults, setDriftResults] = useState<any>(null);
-  const driftInputRef = useRef<HTMLInputElement>(null);
+  const driftRefInput = useRef<HTMLInputElement>(null);
+  const driftTestInput = useRef<HTMLInputElement>(null);
+  const [driftRefFile, setDriftRefFile] = useState<File | null>(null);
+  const [driftTestFile, setDriftTestFile] = useState<File | null>(null);
 
-  const handleDrift = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const handleRunDrift = async () => {
+      if (!driftRefFile || !driftTestFile) return;
       
-      const edaResult = data?.analysisResults.find((i: Issue) => i.issueType === "EDA_DATA");
-      const edaData = edaResult?.rawJson as any;
-      if (!edaData || !edaData.distributions) {
-          alert("Cannot perform drift analysis: Missing training data distributions.");
-          return;
-      }
-
       setDriftLoading(true);
       try {
           const formData = new FormData();
-          formData.append("test_file", file);
-          formData.append("train_distributions", JSON.stringify(edaData.distributions));
+          formData.append("reference_file", driftRefFile);
+          formData.append("test_file", driftTestFile);
           
           const res = await fetch(`/api/drift`, {
               method: "POST",
@@ -312,7 +307,6 @@ export default function ResultsPage() {
           alert("Failed to analyze data drift.");
       } finally {
           setDriftLoading(false);
-          if (driftInputRef.current) driftInputRef.current.value = '';
       }
   };
 
@@ -384,11 +378,11 @@ export default function ResultsPage() {
   const dataDictResult = data.analysisResults.find((i: Issue) => i.issueType === "DATA_DICTIONARY");
   const edaResult = data.analysisResults.find((i: Issue) => i.issueType === "EDA_DATA");
   const edaData = edaResult?.rawJson as any;
-  const shapResult = data.analysisResults.find((i: Issue) => i.issueType === "SHAP_DATA");
+  const shapResult = data.analysisResults.find((i: Issue) => i.issueType === "SEGMENTED_SHAP_DATA" || i.issueType === "SHAP_DATA");
   const shapData = shapResult?.rawJson as any;
   const layer1Result = data.analysisResults.find((i: Issue) => i.issueType === "LAYER1_ENGINE");
   const layer1Data = layer1Result?.rawJson as any;
-  const actualIssues = data.analysisResults.filter((i: Issue) => !["DATA_DICTIONARY", "EDA_DATA", "SHAP_DATA", "LAYER1_ENGINE"].includes(i.issueType));
+  const actualIssues = data.analysisResults.filter((i: Issue) => !["DATA_DICTIONARY", "EDA_DATA", "SHAP_DATA", "SEGMENTED_SHAP_DATA", "LAYER1_ENGINE"].includes(i.issueType));
 
   const severityIcon = {
     HIGH: <AlertCircle className="w-6 h-6 text-red-500" />,
@@ -837,40 +831,93 @@ export default function ResultsPage() {
                     </p>
                 </div>
 
-                {shapData && shapData.features && shapData.features.length > 0 && (
+                {shapData && shapData.clusters && Object.keys(shapData.clusters).length > 0 ? (
                     <div className="relative overflow-hidden bg-white border border-neutral-200 rounded-[2.5rem] p-10 shadow-lg transition hover:shadow-xl">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
                         
                         <div className="relative z-10">
                             <div className="flex flex-col items-center text-center mb-8">
                                 <Activity className="w-12 h-12 text-emerald-600 mb-4" />
-                                <h3 className="text-2xl font-bold mb-2">Model Intelligence</h3>
+                                <h3 className="text-2xl font-bold mb-2">Segmented Model Intelligence</h3>
                                 <p className="text-neutral-500 text-sm max-w-3xl leading-relaxed">
-                                    <RichText content={`Based on a SHAP analysis of a Random Forest trained to predict ${shapData.target}, these are the Top 10 most influential features driving your data's predictive power.`} />
+                                    <RichText content="Your data naturally grouped into distinct behavioral clusters. Here are the top features driving predictions within each specific segment." />
                                 </p>
                             </div>
+
+                            {shapData.insights && shapData.insights.length > 0 && (
+                                <div className="mb-8 p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2">
+                                    {shapData.insights.map((insight: string, idx: number) => (
+                                        <p key={idx} className="text-emerald-800 font-medium text-sm flex gap-2">
+                                            <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0"/> {insight}
+                                        </p>
+                                    ))}
+                                </div>
+                            )}
                             
-                            <div className="space-y-4 max-w-4xl mx-auto">
-                                {shapData.features.slice(0, 10).map((feature: string, idx: number) => {
-                                    const maxVal = Math.max(...shapData.importance);
-                                    const width = Math.max(5, (shapData.importance[idx] / maxVal) * 100);
-                                    
-                                    return (
-                                        <div key={feature} className="flex items-center gap-6">
-                                            <span className="w-48 text-sm font-bold truncate text-neutral-700 text-right tracking-tight">{feature}</span>
-                                            <div className="flex-1 h-4 bg-neutral-100 rounded-full overflow-hidden border border-neutral-200 shadow-inner">
-                                                <div 
-                                                    className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-blue-500'}`} 
-                                                    style={{ width: `${width}%` }}
-                                                ></div>
-                                            </div>
-                                            <span className="w-16 text-sm font-bold text-neutral-500">{(shapData.importance[idx] * 100).toFixed(1)}%</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {Object.entries(shapData.clusters).map(([clusterName, clusterInfo]: any) => (
+                                    <div key={clusterName} className="p-6 bg-neutral-50 rounded-2xl border border-neutral-100 shadow-inner">
+                                        <h4 className="font-black text-lg text-neutral-800 mb-4 pb-2 border-b uppercase tracking-tight">{clusterName}</h4>
+                                        <div className="space-y-4">
+                                            {clusterInfo.top_features.map((feature: string) => {
+                                                const importance = clusterInfo.feature_importance[feature];
+                                                const maxVal = Math.max(...(Object.values(clusterInfo.feature_importance) as number[]));
+                                                const width = Math.max(5, (importance / maxVal) * 100);
+                                                
+                                                return (
+                                                    <div key={feature} className="flex flex-col gap-1.5">
+                                                        <div className="flex justify-between items-center text-xs font-bold text-neutral-600 uppercase tracking-wide">
+                                                            <span className="truncate pr-4">{feature}</span>
+                                                            <span className="text-emerald-600">{(importance * 100).toFixed(1)}%</span>
+                                                        </div>
+                                                        <div className="h-2 bg-neutral-200 rounded-full overflow-hidden shadow-inner">
+                                                            <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: `${width}%` }}></div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
-                                    )
-                                })}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
+                ) : (
+                    shapData && shapData.features && (
+                        <div className="relative overflow-hidden bg-white border border-neutral-200 rounded-[2.5rem] p-10 shadow-lg transition hover:shadow-xl">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
+                            
+                            <div className="relative z-10">
+                                <div className="flex flex-col items-center text-center mb-8">
+                                    <Activity className="w-12 h-12 text-emerald-600 mb-4" />
+                                    <h3 className="text-2xl font-bold mb-2">Model Intelligence</h3>
+                                    <p className="text-neutral-500 text-sm max-w-3xl leading-relaxed">
+                                        <RichText content={`Based on a SHAP analysis of a Random Forest trained to predict ${shapData.target}, these are the Top 10 most influential features driving your data's predictive power.`} />
+                                    </p>
+                                </div>
+                                
+                                <div className="space-y-4 max-w-4xl mx-auto">
+                                    {shapData.features.slice(0, 10).map((feature: string, idx: number) => {
+                                        const maxVal = Math.max(...shapData.importance);
+                                        const width = Math.max(5, (shapData.importance[idx] / maxVal) * 100);
+                                        
+                                        return (
+                                            <div key={feature} className="flex items-center gap-6">
+                                                <span className="w-48 text-sm font-bold truncate text-neutral-700 text-right tracking-tight">{feature}</span>
+                                                <div className="flex-1 h-4 bg-neutral-100 rounded-full overflow-hidden border border-neutral-200 shadow-inner">
+                                                    <div 
+                                                        className={`h-full rounded-full transition-all duration-1000 ${idx === 0 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-blue-500'}`} 
+                                                        style={{ width: `${width}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span className="w-16 text-sm font-bold text-neutral-500">{(shapData.importance[idx] * 100).toFixed(1)}%</span>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )
                 )}
             </div>
 
@@ -946,53 +993,61 @@ export default function ResultsPage() {
                         </p>
                     </div>
 
-                    <div className="flex justify-center mb-12">
-                        <input type="file" ref={driftInputRef} className="hidden" onChange={handleDrift} accept=".csv,.xlsx,.xls,.json,.parquet" />
+                    <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-12">
+                        <div className="flex flex-col gap-2 w-full md:w-auto">
+                            <input type="file" ref={driftRefInput} className="hidden" onChange={(e) => setDriftRefFile(e.target.files?.[0] || null)} accept=".csv,.xlsx,.xls,.json,.parquet" />
+                            <button onClick={() => driftRefInput.current?.click()} className={`px-8 py-4 border-2 rounded-xl font-bold transition flex items-center justify-center gap-2 ${driftRefFile ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-neutral-300 hover:bg-neutral-50 text-neutral-600'}`}>
+                                {driftRefFile ? <><CheckCircle className="w-5 h-5"/> {driftRefFile.name}</> : "1. Upload Training Data"}
+                            </button>
+                        </div>
+                        <div className="flex flex-col gap-2 w-full md:w-auto">
+                            <input type="file" ref={driftTestInput} className="hidden" onChange={(e) => setDriftTestFile(e.target.files?.[0] || null)} accept=".csv,.xlsx,.xls,.json,.parquet" />
+                            <button onClick={() => driftTestInput.current?.click()} className={`px-8 py-4 border-2 rounded-xl font-bold transition flex items-center justify-center gap-2 ${driftTestFile ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-neutral-300 hover:bg-neutral-50 text-neutral-600'}`}>
+                                {driftTestFile ? <><CheckCircle className="w-5 h-5"/> {driftTestFile.name}</> : "2. Upload Prod Data"}
+                            </button>
+                        </div>
+                        
                         <button 
-                            onClick={() => driftInputRef.current?.click()}
-                            disabled={driftLoading}
-                            className="inline-flex items-center gap-3 bg-neutral-900 hover:bg-neutral-800 text-white px-10 py-4 rounded-full font-bold text-xl shadow-xl transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={handleRunDrift}
+                            disabled={driftLoading || !driftRefFile || !driftTestFile}
+                            className="inline-flex items-center gap-3 bg-neutral-900 hover:bg-neutral-800 text-white px-10 py-4 rounded-xl font-bold shadow-xl transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <GitBranch className="w-6 h-6" />
-                            {driftLoading ? "Analyzing Distributions..." : "Upload Test Dataset"}
+                            <GitBranch className="w-5 h-5" />
+                            {driftLoading ? "Analyzing..." : "Run Multi-Metric Drift"}
                         </button>
                     </div>
 
-                    {driftResults && (
+                    {driftResults && driftResults.features && (
                         <div className="bg-neutral-50 rounded-2xl p-8 border border-neutral-200">
                             <h4 className="text-2xl font-bold mb-6 text-center">
-                                {driftResults.drift_detected ? (
+                                {driftResults.overall_drift_detected ? (
                                     <span className="text-red-600 flex items-center justify-center gap-2"><AlertTriangle className="w-6 h-6" /> Significant Drift Detected</span>
                                 ) : (
                                     <span className="text-emerald-600 flex items-center justify-center gap-2"><CheckCircle className="w-6 h-6" /> No Significant Drift</span>
                                 )}
                             </h4>
                             
-                            {driftResults.drifted_features.length > 0 ? (
-                                <div className="space-y-4">
-                                    <div className="grid grid-cols-3 text-sm font-bold text-neutral-500 uppercase tracking-wider px-4 pb-2 border-b border-neutral-200">
-                                        <div>Feature</div>
-                                        <div className="text-center">Severity</div>
-                                        <div className="text-right">PSI Score</div>
-                                    </div>
-                                    {driftResults.drifted_features.map((feature: any) => (
-                                        <div key={feature.column} className="grid grid-cols-3 items-center bg-white p-4 rounded-xl border border-neutral-200 shadow-sm">
-                                            <div className="font-bold text-neutral-800">{feature.column}</div>
-                                            <div className="flex justify-center">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${feature.severity === 'HIGH' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                                                    {feature.severity}
-                                                </span>
-                                            </div>
-                                            <div className="text-right font-mono font-bold text-neutral-700">{feature.psi.toFixed(3)}</div>
-                                        </div>
-                                    ))}
-                                    <p className="text-xs text-neutral-500 text-center mt-6">
-                                        * PSI &lt; 0.1: No Drift | 0.1 - 0.2: Moderate Drift | &gt; 0.2: Significant Drift
-                                    </p>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-6 text-[10px] font-bold text-neutral-500 uppercase tracking-wider px-4 pb-2 border-b border-neutral-200 text-center">
+                                    <div className="col-span-2 text-left">Feature</div>
+                                    <div>PSI</div>
+                                    <div>KL Divergence</div>
+                                    <div>Wasserstein</div>
+                                    <div>KS Stat</div>
                                 </div>
-                            ) : (
-                                <p className="text-center text-neutral-600 font-bold">All feature distributions align perfectly with the training dataset.</p>
-                            )}
+                                {Object.entries(driftResults.features).map(([featureName, data]: any) => (
+                                    <div key={featureName} className="grid grid-cols-6 items-center bg-white p-4 rounded-xl border border-neutral-200 shadow-sm text-center">
+                                        <div className="col-span-2 font-bold text-neutral-800 text-left flex items-center gap-2">
+                                            {featureName}
+                                            {data.drift_detected && <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" title="Drift Detected"></span>}
+                                        </div>
+                                        <div className={`font-mono text-sm font-bold ${data.drift_detected ? 'text-red-600' : 'text-neutral-500'}`}>{data.psi.toFixed(3)}</div>
+                                        <div className={`font-mono text-sm font-bold ${data.drift_detected ? 'text-red-600' : 'text-neutral-500'}`}>{data.kl_divergence.toFixed(3)}</div>
+                                        <div className={`font-mono text-sm font-bold ${data.drift_detected ? 'text-red-600' : 'text-neutral-500'}`}>{data.wasserstein.toFixed(3)}</div>
+                                        <div className={`font-mono text-sm font-bold ${data.drift_detected ? 'text-red-600' : 'text-neutral-500'}`}>{data.ks_statistic.toFixed(3)}</div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>

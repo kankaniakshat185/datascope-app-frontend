@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
         body: edaFormData,
         signal: controller.signal,
       }),
-      fetch(`${mlServiceUrl}/shap`, {
+      fetch(`${mlServiceUrl}/api/v2/analytical-engine/segmented-shap?target_column=${encodeURIComponent(targetColumn)}`, {
         method: "POST",
         body: shapFormData,
         signal: controller.signal,
@@ -180,12 +180,12 @@ export async function POST(req: NextRequest) {
       await prisma.analysisResult.create({
         data: {
           datasetId: dataset.id,
-          issueType: "SHAP_DATA",
+          issueType: "SEGMENTED_SHAP_DATA",
           severity: "INFO",
-          description: "Feature Importance & SHAP Values",
+          description: "Cluster-based Feature Importance",
           suggestion: "",
           impactScore: "0%",
-          rawJson: shapData,
+          rawJson: shapData || {},
         },
       });
     }

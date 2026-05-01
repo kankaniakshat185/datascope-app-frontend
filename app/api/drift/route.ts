@@ -3,20 +3,20 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const file = formData.get("test_file") as File;
-    const trainDistributions = formData.get("train_distributions") as string;
+    const referenceFile = formData.get("reference_file") as File;
+    const testFile = formData.get("test_file") as File;
 
-    if (!file || !trainDistributions) {
-      return NextResponse.json({ error: "File and train distributions required" }, { status: 400 });
+    if (!referenceFile || !testFile) {
+      return NextResponse.json({ error: "Both Reference File and Test File are required" }, { status: 400 });
     }
 
     const mlServiceUrl = process.env.ML_SERVICE_URL || "http://localhost:8000";
 
     const driftFormData = new FormData();
-    driftFormData.append("test_file", file);
-    driftFormData.append("train_distributions", trainDistributions);
+    driftFormData.append("reference_file", referenceFile);
+    driftFormData.append("test_file", testFile);
 
-    const res = await fetch(`${mlServiceUrl}/drift`, {
+    const res = await fetch(`${mlServiceUrl}/api/v2/analytical-engine/drift`, {
       method: "POST",
       body: driftFormData,
     });

@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const cleanFormData = new FormData();
     cleanFormData.append("file", file);
 
-    const res = await fetch(`${mlServiceUrl}/clean`, {
+    const res = await fetch(`${mlServiceUrl}/api/v2/analytical-engine/pipeline/run`, {
       method: "POST",
       body: cleanFormData,
     });
