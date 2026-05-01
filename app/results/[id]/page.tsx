@@ -283,6 +283,26 @@ export default function ResultsPage() {
   const driftTestInput = useRef<HTMLInputElement>(null);
   const [driftRefFile, setDriftRefFile] = useState<File | null>(null);
   const [driftTestFile, setDriftTestFile] = useState<File | null>(null);
+  const [pipelineConfig, setPipelineConfig] = useState<any[]>([
+    { id: "1", step: "impute_missing", params: { strategy: "median" } },
+    { id: "2", step: "remove_outliers", params: { threshold: 0.6 } },
+    { id: "3", step: "encode_categorical", params: { strategy: "one_hot" } }
+  ]);
+
+  const toggleStep = (id: string) => {
+      setPipelineConfig(prev => {
+          const newConfig = [...prev];
+          const stepIndex = newConfig.findIndex(s => s.id === id);
+          if (stepIndex > -1) {
+              newConfig.splice(stepIndex, 1);
+          } else {
+              if (id === "1") newConfig.push({ id: "1", step: "impute_missing", params: { strategy: "median" } });
+              if (id === "2") newConfig.push({ id: "2", step: "remove_outliers", params: { threshold: 0.6 } });
+              if (id === "3") newConfig.push({ id: "3", step: "encode_categorical", params: { strategy: "one_hot" } });
+          }
+          return newConfig.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+      });
+  };
 
   const handleRunDrift = async () => {
       if (!driftRefFile || !driftTestFile) return;
@@ -318,6 +338,8 @@ export default function ResultsPage() {
       try {
           const formData = new FormData();
           formData.append("file", file);
+          const cleanConfig = pipelineConfig.map(({ step, params }) => ({ step, params }));
+          formData.append("config_json", JSON.stringify(cleanConfig));
           
           const res = await fetch(`/api/clean`, {
               method: "POST",
@@ -616,7 +638,7 @@ export default function ResultsPage() {
                    <Activity className="w-16 h-16 text-indigo-500 mx-auto mb-6" />
                    <h3 className="text-3xl font-bold mb-4">Deep Machine Learning Analytics</h3>
                    <p className="text-lg text-neutral-600 mb-2 leading-relaxed max-w-2xl mx-auto">
-                      Multi-method outlier detection and causal feature impact analysis powered by Layer 1 Engine.
+                      <RichText content="Multi-method outlier detection and causal feature impact analysis powered by the Layer 1 Engine." />
                    </p>
                 </div>
                 
@@ -627,12 +649,35 @@ export default function ResultsPage() {
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                           {Object.entries(layer1Data.outlier_analysis.summary.method_flags).map(([method, pct]: any) => (
-                              <div key={method} className="bg-neutral-50 p-4 rounded-xl border border-neutral-100 text-center">
+                              <div key={method} className="bg-neutral-50 p-4 rounded-xl border border-neutral-100 text-center shadow-inner">
                                   <p className="text-xs font-bold text-neutral-400 uppercase">{method.replace('_', ' ')}</p>
                                   <p className="text-xl font-black text-neutral-800">{Number(pct).toFixed(1)}%</p>
                               </div>
                           ))}
                       </div>
+
+                      {layer1Data.outlier_analysis.row_results && Object.keys(layer1Data.outlier_analysis.row_results).length > 0 && (
+                          <div className="mt-8 space-y-3">
+                              <h5 className="font-bold text-sm uppercase tracking-wider text-neutral-500 mb-4 border-b pb-2">Top Extreme Anomalies</h5>
+                              {Object.entries(layer1Data.outlier_analysis.row_results).slice(0, 5).map(([rowIdx, result]: any) => {
+                                  const methods = [];
+                                  if (result.method_scores.z_score > 3.0) methods.push("Z-Score");
+                                  if (result.method_scores.mad_score > 3.5) methods.push("MAD");
+                                  if (result.method_scores.isolation_forest === 1) methods.push("Isolation Forest");
+                                  if (result.method_scores.dbscan === 1) methods.push("DBSCAN");
+                                  
+                                  return (
+                                      <div key={rowIdx} className="flex justify-between items-center p-4 bg-red-50 rounded-xl border border-red-100 transition hover:shadow-md">
+                                          <div className="font-bold text-red-900 bg-white px-3 py-1 rounded-lg border border-red-200 shadow-sm">Row #{rowIdx}</div>
+                                          <div className="text-right">
+                                              <p className="text-sm font-bold text-red-700">{methods.length}/4 methods flag this point as anomaly</p>
+                                              <p className="text-[10px] uppercase font-bold text-red-400 mt-1 tracking-wider">({methods.join(', ')})</p>
+                                          </div>
+                                      </div>
+                                  )
+                              })}
+                          </div>
+                      )}
                    </div>
                 )}
                 
@@ -643,7 +688,10 @@ export default function ResultsPage() {
                       {layer1Data.feature_importance.insights && (
                           <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
                               {layer1Data.feature_importance.insights.map((insight: string, idx: number) => (
-                                  <p key={idx} className="text-amber-800 font-medium flex gap-2"><CheckCircle className="w-5 h-5 text-amber-600 shrink-0"/> {insight}</p>
+                                  <div key={idx} className="text-amber-800 font-medium flex gap-2 items-start">
+                                      <CheckCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5"/> 
+                                      <div><RichText content={insight} /></div>
+                                  </div>
                               ))}
                           </div>
                       )}
@@ -758,29 +806,53 @@ export default function ResultsPage() {
                 <div className="relative z-10 text-neutral-900 w-full">
                     <div className="text-center mb-10">
                         <Sparkles className="w-16 h-16 text-green-600 mx-auto mb-6" />
-                        <h3 className="text-3xl font-bold mb-4">One-Click Remediation</h3>
+                        <h3 className="text-3xl font-bold mb-4">Pipeline Builder</h3>
                         <p className="text-neutral-600 text-lg max-w-2xl mx-auto mb-8 w-full leading-relaxed">
-                            <RichText content="The DataScope Engine will automatically clean your dataset based on the issues found during analysis. Applying these smart remediations will immediately improve data quality and model stability." />
+                            <RichText content="Configure a robust data pipeline to automatically clean and transform your dataset. Select your desired steps below, and the DataScope Engine will execute them sequentially." />
                         </p>
                     </div>
                     
-                    <div className="text-left bg-neutral-50 p-8 rounded-xl mb-10 space-y-6 border border-neutral-100 shadow-inner">
-                        <div className="flex gap-5 items-start">
-                            <div className="p-2 bg-white rounded-xl shadow-sm border border-neutral-100">
-                                <CheckCircle className="w-6 h-6 text-green-600" />
+                    <div className="text-left bg-neutral-50 p-8 rounded-xl mb-10 space-y-4 border border-neutral-100 shadow-inner max-w-3xl mx-auto">
+                        
+                        {/* Imputation Step */}
+                        <div 
+                            className={`flex gap-5 items-center p-4 rounded-xl border-2 transition cursor-pointer ${pipelineConfig.some(s => s.id === "1") ? 'bg-white border-green-500 shadow-sm' : 'bg-neutral-100 border-transparent opacity-60'}`}
+                            onClick={() => toggleStep("1")}
+                        >
+                            <div className="p-2">
+                                {pipelineConfig.some(s => s.id === "1") ? <CheckCircle className="w-6 h-6 text-green-600" /> : <div className="w-6 h-6 border-2 border-neutral-300 rounded-full" />}
                             </div>
-                            <div>
-                                <h4 className="font-bold text-neutral-900 text-lg">1. Advanced Median/Mode Imputation</h4>
-                                <p className="text-sm text-neutral-500">Missing numeric values will be filled with the column&apos;s <span className="font-mono text-xs bg-black/5 px-1 rounded font-bold text-green-700">Median</span>. Missing text values will be filled with the column&apos;s <span className="font-mono text-xs bg-black/5 px-1 rounded font-bold text-green-700">Mode</span>.</p>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-neutral-900 text-lg">Step 1: Impute Missing Values</h4>
+                                <p className="text-sm text-neutral-500">Numeric NaNs replaced with <span className="font-mono text-xs bg-black/5 px-1 rounded font-bold text-green-700">Median</span>. Text NaNs replaced with <span className="font-mono text-xs bg-black/5 px-1 rounded font-bold text-green-700">Mode</span>.</p>
                             </div>
                         </div>
-                        <div className="flex gap-5 items-start">
-                            <div className="p-2 bg-white rounded-xl shadow-sm border border-neutral-100">
-                                <CheckCircle className="w-6 h-6 text-green-600" />
+
+                        {/* Outlier Step */}
+                        <div 
+                            className={`flex gap-5 items-center p-4 rounded-xl border-2 transition cursor-pointer ${pipelineConfig.some(s => s.id === "2") ? 'bg-white border-green-500 shadow-sm' : 'bg-neutral-100 border-transparent opacity-60'}`}
+                            onClick={() => toggleStep("2")}
+                        >
+                            <div className="p-2">
+                                {pipelineConfig.some(s => s.id === "2") ? <CheckCircle className="w-6 h-6 text-green-600" /> : <div className="w-6 h-6 border-2 border-neutral-300 rounded-full" />}
                             </div>
-                            <div>
-                                <h4 className="font-bold text-neutral-900 text-lg">2. Multi-Method Outlier Destruction</h4>
-                                <p className="text-sm text-neutral-500">Instead of basic IQR capping, we use a sophisticated ensemble of Isolation Forest (40%), MAD (25%), DBSCAN (20%), and Z-Score (15%). Rows with a consensus score ≥ 60% are cleanly dropped to eradicate extreme noise.</p>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-neutral-900 text-lg">Step 2: Multi-Method Outlier Destruction</h4>
+                                <p className="text-sm text-neutral-500">Ensemble of Isolation Forest, MAD, DBSCAN, and Z-Score drops rows with consensus &ge; 60%.</p>
+                            </div>
+                        </div>
+
+                        {/* Encoding Step */}
+                        <div 
+                            className={`flex gap-5 items-center p-4 rounded-xl border-2 transition cursor-pointer ${pipelineConfig.some(s => s.id === "3") ? 'bg-white border-green-500 shadow-sm' : 'bg-neutral-100 border-transparent opacity-60'}`}
+                            onClick={() => toggleStep("3")}
+                        >
+                            <div className="p-2">
+                                {pipelineConfig.some(s => s.id === "3") ? <CheckCircle className="w-6 h-6 text-green-600" /> : <div className="w-6 h-6 border-2 border-neutral-300 rounded-full" />}
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-neutral-900 text-lg">Step 3: Encode Categorical Features</h4>
+                                <p className="text-sm text-neutral-500">Applies robust Target Encoding or One-Hot Encoding to categorical variables automatically.</p>
                             </div>
                         </div>
                     </div>

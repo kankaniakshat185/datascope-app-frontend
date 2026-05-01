@@ -113,8 +113,10 @@ export async function POST(req: NextRequest) {
       throw new Error("Invalid ML response format");
     }
 
-    // Store old issues
-    for (const issue of mlData.issues) {
+    const filteredIssues = mlData.issues.filter((i: any) => i.type !== "OUTLIERS" && i.type !== "OUTLIER_CAPPING");
+
+    // ✅ Store analysis results safely
+    for (const issue of filteredIssues) {
       const numericImpact =
         typeof issue.impact === "number"
           ? issue.impact
@@ -146,6 +148,22 @@ export async function POST(req: NextRequest) {
           rawJson: layer1Data || {},
         },
       });
+
+      // Insert new Consensus Outlier Issue Card
+      if (layer1Data.outlier_analysis?.summary?.percentage_flagged > 0) {
+        const pct = layer1Data.outlier_analysis.summary.percentage_flagged;
+        await prisma.analysisResult.create({
+            data: {
+              datasetId: dataset.id,
+              issueType: "OUTLIERS_CONSENSUS",
+              severity: pct > 5 ? "HIGH" : "MEDIUM",
+              description: `Advanced Consensus Engine flagged ${pct.toFixed(1)}% of your rows as severe anomalies.`,
+              suggestion: "Use the Pipeline Builder to drop rows with an ensemble consensus score > 0.6.",
+              impactScore: `-${(pct * 0.5).toFixed(1)}%`,
+              rawJson: layer1Data.outlier_analysis || {},
+            }
+        });
+      }
     }
 
     if (dictData) {

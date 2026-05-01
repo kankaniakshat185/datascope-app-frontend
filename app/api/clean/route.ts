@@ -4,6 +4,7 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
+    const configJson = formData.get("config_json") as string || "[]";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -13,6 +14,7 @@ export async function POST(req: NextRequest) {
 
     const cleanFormData = new FormData();
     cleanFormData.append("file", file);
+    cleanFormData.append("config_json", configJson);
 
     const res = await fetch(`${mlServiceUrl}/api/v2/analytical-engine/pipeline/run`, {
       method: "POST",
