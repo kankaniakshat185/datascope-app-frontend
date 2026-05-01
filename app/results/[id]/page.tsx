@@ -284,9 +284,11 @@ export default function ResultsPage() {
   const [driftRefFile, setDriftRefFile] = useState<File | null>(null);
   const [driftTestFile, setDriftTestFile] = useState<File | null>(null);
   const [pipelineConfig, setPipelineConfig] = useState<any[]>([
+    { id: "0", step: "drop_missing", params: { threshold: 0.5 } },
     { id: "1", step: "impute_missing", params: { strategy: "median" } },
     { id: "2", step: "remove_outliers", params: { threshold: 0.6 } },
-    { id: "3", step: "encode_categorical", params: { strategy: "one_hot" } }
+    { id: "3", step: "encode_categorical", params: { strategy: "one_hot" } },
+    { id: "4", step: "scale_features", params: { method: "standard" } }
   ]);
 
   const toggleStep = (id: string) => {
@@ -296,9 +298,11 @@ export default function ResultsPage() {
           if (stepIndex > -1) {
               newConfig.splice(stepIndex, 1);
           } else {
+              if (id === "0") newConfig.push({ id: "0", step: "drop_missing", params: { threshold: 0.5 } });
               if (id === "1") newConfig.push({ id: "1", step: "impute_missing", params: { strategy: "median" } });
               if (id === "2") newConfig.push({ id: "2", step: "remove_outliers", params: { threshold: 0.6 } });
               if (id === "3") newConfig.push({ id: "3", step: "encode_categorical", params: { strategy: "one_hot" } });
+              if (id === "4") newConfig.push({ id: "4", step: "scale_features", params: { method: "standard" } });
           }
           return newConfig.sort((a, b) => parseInt(a.id) - parseInt(b.id));
       });
@@ -814,6 +818,20 @@ export default function ResultsPage() {
                     
                     <div className="text-left bg-neutral-50 p-8 rounded-xl mb-10 space-y-4 border border-neutral-100 shadow-inner max-w-3xl mx-auto">
                         
+                        {/* Drop Missing Step */}
+                        <div 
+                            className={`flex gap-5 items-center p-4 rounded-xl border-2 transition cursor-pointer ${pipelineConfig.some(s => s.id === "0") ? 'bg-white border-green-500 shadow-sm' : 'bg-neutral-100 border-transparent opacity-60'}`}
+                            onClick={() => toggleStep("0")}
+                        >
+                            <div className="p-2">
+                                {pipelineConfig.some(s => s.id === "0") ? <CheckCircle className="w-6 h-6 text-green-600" /> : <div className="w-6 h-6 border-2 border-neutral-300 rounded-full" />}
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-neutral-900 text-lg">Step 1: Drop Heavy Missing Columns</h4>
+                                <p className="text-sm text-neutral-500">Automatically drops any column that is missing more than <span className="font-mono text-xs bg-black/5 px-1 rounded font-bold text-green-700">50%</span> of its values.</p>
+                            </div>
+                        </div>
+
                         {/* Imputation Step */}
                         <div 
                             className={`flex gap-5 items-center p-4 rounded-xl border-2 transition cursor-pointer ${pipelineConfig.some(s => s.id === "1") ? 'bg-white border-green-500 shadow-sm' : 'bg-neutral-100 border-transparent opacity-60'}`}
@@ -823,7 +841,7 @@ export default function ResultsPage() {
                                 {pipelineConfig.some(s => s.id === "1") ? <CheckCircle className="w-6 h-6 text-green-600" /> : <div className="w-6 h-6 border-2 border-neutral-300 rounded-full" />}
                             </div>
                             <div className="flex-1">
-                                <h4 className="font-bold text-neutral-900 text-lg">Step 1: Impute Missing Values</h4>
+                                <h4 className="font-bold text-neutral-900 text-lg">Step 2: Impute Missing Values</h4>
                                 <p className="text-sm text-neutral-500">Numeric NaNs replaced with <span className="font-mono text-xs bg-black/5 px-1 rounded font-bold text-green-700">Median</span>. Text NaNs replaced with <span className="font-mono text-xs bg-black/5 px-1 rounded font-bold text-green-700">Mode</span>.</p>
                             </div>
                         </div>
@@ -837,7 +855,7 @@ export default function ResultsPage() {
                                 {pipelineConfig.some(s => s.id === "2") ? <CheckCircle className="w-6 h-6 text-green-600" /> : <div className="w-6 h-6 border-2 border-neutral-300 rounded-full" />}
                             </div>
                             <div className="flex-1">
-                                <h4 className="font-bold text-neutral-900 text-lg">Step 2: Multi-Method Outlier Destruction</h4>
+                                <h4 className="font-bold text-neutral-900 text-lg">Step 3: Multi-Method Outlier Destruction</h4>
                                 <p className="text-sm text-neutral-500">Ensemble of Isolation Forest, MAD, DBSCAN, and Z-Score drops rows with consensus &ge; 60%.</p>
                             </div>
                         </div>
@@ -851,8 +869,22 @@ export default function ResultsPage() {
                                 {pipelineConfig.some(s => s.id === "3") ? <CheckCircle className="w-6 h-6 text-green-600" /> : <div className="w-6 h-6 border-2 border-neutral-300 rounded-full" />}
                             </div>
                             <div className="flex-1">
-                                <h4 className="font-bold text-neutral-900 text-lg">Step 3: Encode Categorical Features</h4>
-                                <p className="text-sm text-neutral-500">Applies robust Target Encoding or One-Hot Encoding to categorical variables automatically.</p>
+                                <h4 className="font-bold text-neutral-900 text-lg">Step 4: Encode Categorical Features</h4>
+                                <p className="text-sm text-neutral-500">Applies robust One-Hot Encoding to categorical variables automatically.</p>
+                            </div>
+                        </div>
+
+                        {/* Scaling Step */}
+                        <div 
+                            className={`flex gap-5 items-center p-4 rounded-xl border-2 transition cursor-pointer ${pipelineConfig.some(s => s.id === "4") ? 'bg-white border-green-500 shadow-sm' : 'bg-neutral-100 border-transparent opacity-60'}`}
+                            onClick={() => toggleStep("4")}
+                        >
+                            <div className="p-2">
+                                {pipelineConfig.some(s => s.id === "4") ? <CheckCircle className="w-6 h-6 text-green-600" /> : <div className="w-6 h-6 border-2 border-neutral-300 rounded-full" />}
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-neutral-900 text-lg">Step 5: Standardize Numeric Features</h4>
+                                <p className="text-sm text-neutral-500">Scales numeric features so they have a mean of 0 and a standard deviation of 1 (StandardScaler).</p>
                             </div>
                         </div>
                     </div>
@@ -1050,14 +1082,16 @@ export default function ResultsPage() {
                     <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-12">
                         <div className="flex flex-col gap-2 w-full md:w-auto">
                             <input type="file" ref={driftRefInput} className="hidden" onChange={(e) => setDriftRefFile(e.target.files?.[0] || null)} accept=".csv,.xlsx,.xls,.json,.parquet" />
-                            <button onClick={() => driftRefInput.current?.click()} className={`px-8 py-4 border-2 rounded-xl font-bold transition flex items-center justify-center gap-2 ${driftRefFile ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-neutral-300 hover:bg-neutral-50 text-neutral-600'}`}>
-                                {driftRefFile ? <><CheckCircle className="w-5 h-5"/> {driftRefFile.name}</> : "1. Upload Training Data"}
+                            <button onClick={() => driftRefInput.current?.click()} className="inline-flex items-center gap-3 bg-neutral-900 hover:bg-neutral-800 text-white px-10 py-4 rounded-full font-bold text-xl shadow-xl transition-all hover:-translate-y-1">
+                                <Sparkles className="w-5 h-5" />
+                                {driftRefFile ? driftRefFile.name : "1. Upload Training Data"}
                             </button>
                         </div>
                         <div className="flex flex-col gap-2 w-full md:w-auto">
                             <input type="file" ref={driftTestInput} className="hidden" onChange={(e) => setDriftTestFile(e.target.files?.[0] || null)} accept=".csv,.xlsx,.xls,.json,.parquet" />
-                            <button onClick={() => driftTestInput.current?.click()} className={`px-8 py-4 border-2 rounded-xl font-bold transition flex items-center justify-center gap-2 ${driftTestFile ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-neutral-300 hover:bg-neutral-50 text-neutral-600'}`}>
-                                {driftTestFile ? <><CheckCircle className="w-5 h-5"/> {driftTestFile.name}</> : "2. Upload Prod Data"}
+                            <button onClick={() => driftTestInput.current?.click()} className="inline-flex items-center gap-3 bg-neutral-900 hover:bg-neutral-800 text-white px-10 py-4 rounded-full font-bold text-xl shadow-xl transition-all hover:-translate-y-1">
+                                <Sparkles className="w-5 h-5" />
+                                {driftTestFile ? driftTestFile.name : "2. Upload Prod Data"}
                             </button>
                         </div>
                         
