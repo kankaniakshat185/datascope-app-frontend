@@ -20,10 +20,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // ✅ Read file in memory
+    // Read file in memory
     const buffer = Buffer.from(await file.arrayBuffer());
+    
+    // Attempt to extract target column from CSV header (last column)
+    let targetColumn = "target";
+    if (file.name.endsWith('.csv')) {
+        const text = buffer.toString('utf-8');
+        const firstLine = text.split('\n')[0];
+        const headers = firstLine.split(',');
+        if (headers.length > 0) {
+            targetColumn = headers[headers.length - 1].trim();
+        }
+    }
 
-    // ✅ Create dataset entry
+    // Create dataset entry
     const dataset = await prisma.dataset.create({
       data: {
         userId: session.user.id,
@@ -32,11 +43,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // ✅ ML Service URL
-    const mlServiceUrl =
-      process.env.ML_SERVICE_URL || "http://localhost:8000";
+    // ML Service URL
+    const mlServiceUrl = process.env.ML_SERVICE_URL || "http://localhost:8000";
 
-    // ✅ Prepare requests
+    // Prepare requests
     const mlFormData = new FormData();
     mlFormData.append("file", new Blob([buffer], { type: file.type }), file.name);
     if (rules) {
@@ -52,12 +62,17 @@ export async function POST(req: NextRequest) {
     const shapFormData = new FormData();
     shapFormData.append("file", new Blob([buffer], { type: file.type }), file.name);
 
-    // ✅ Add timeout protection
+    // Add timeout protection
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
 
-    const [mlResponse, dictResponse, edaResponse, shapResponse] = await Promise.all([
+    const [mlResponse, layer1Response, dictResponse, edaResponse, shapResponse] = await Promise.all([
       fetch(`${mlServiceUrl}/analyze`, {
+        method: "POST",
+        body: mlFormData,
+        signal: controller.signal,
+      }),
+      fetch(`${mlServiceUrl}/api/v2/analytical-engine/full-analysis?target_column=${encodeURIComponent(targetColumn)}`, {
         method: "POST",
         body: mlFormData,
         signal: controller.signal,
@@ -86,6 +101,7 @@ export async function POST(req: NextRequest) {
     }
 
     const mlData = await mlResponse.json();
+    const layer1Data = layer1Response.ok ? await layer1Response.json() : null;
     const dictData = dictResponse.ok ? await dictResponse.json() : null;
     const edaData = edaResponse.ok ? await edaResponse.json() : null;
     const shapData = shapResponse.ok ? await shapResponse.json() : null;
@@ -94,7 +110,7 @@ export async function POST(req: NextRequest) {
       throw new Error("Invalid ML response format");
     }
 
-    // ✅ Store analysis results safely
+    // Store old issues
     for (const issue of mlData.issues) {
       const numericImpact =
         typeof issue.impact === "number"
@@ -108,9 +124,23 @@ export async function POST(req: NextRequest) {
           severity: issue.severity,
           description: issue.description,
           suggestion: issue.suggestion,
-          impactScore:
-            issue.impact_display || `+${numericImpact.toFixed(2)}%`,
+          impactScore: issue.impact_display || `+${numericImpact.toFixed(2)}%`,
           rawJson: issue,
+        },
+      });
+    }
+
+    // Store Layer 1 Data
+    if (layer1Data) {
+      await prisma.analysisResult.create({
+        data: {
+          datasetId: dataset.id,
+          issueType: "LAYER1_ENGINE",
+          severity: "INFO",
+          description: "Layer 1 Advanced Analytical Engine",
+          suggestion: "",
+          impactScore: "0%",
+          rawJson: layer1Data,
         },
       });
     }
@@ -164,7 +194,6 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error("Upload error:", error);
-
     return NextResponse.json(
       { error: error.message || "Upload failed" },
       { status: 500 }
