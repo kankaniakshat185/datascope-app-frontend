@@ -23,11 +23,11 @@ export async function POST(req: NextRequest) {
     // Read file in memory
     const buffer = Buffer.from(await file.arrayBuffer());
     
-    // Attempt to extract target column from CSV header (last column)
+    // Attempt to extract target column from CSV header safely (just read first 1024 bytes)
     let targetColumn = "target";
     if (file.name.endsWith('.csv')) {
-        const text = buffer.toString('utf-8');
-        const firstLine = text.split('\n')[0];
+        const textChunk = buffer.subarray(0, Math.min(buffer.length, 1024)).toString('utf-8');
+        const firstLine = textChunk.split('\n')[0];
         const headers = firstLine.split(',');
         if (headers.length > 0) {
             targetColumn = headers[headers.length - 1].trim();
@@ -53,6 +53,9 @@ export async function POST(req: NextRequest) {
         mlFormData.append("rules", rules);
     }
 
+    const layer1FormData = new FormData();
+    layer1FormData.append("file", new Blob([buffer], { type: file.type }), file.name);
+
     const dictFormData = new FormData();
     dictFormData.append("file", new Blob([buffer], { type: file.type }), file.name);
 
@@ -74,7 +77,7 @@ export async function POST(req: NextRequest) {
       }),
       fetch(`${mlServiceUrl}/api/v2/analytical-engine/full-analysis?target_column=${encodeURIComponent(targetColumn)}`, {
         method: "POST",
-        body: mlFormData,
+        body: layer1FormData,
         signal: controller.signal,
       }),
       fetch(`${mlServiceUrl}/data-dictionary`, {
@@ -120,12 +123,12 @@ export async function POST(req: NextRequest) {
       await prisma.analysisResult.create({
         data: {
           datasetId: dataset.id,
-          issueType: issue.type,
-          severity: issue.severity,
-          description: issue.description,
-          suggestion: issue.suggestion,
+          issueType: issue.type || "UNKNOWN",
+          severity: issue.severity || "INFO",
+          description: issue.description || "No description provided.",
+          suggestion: issue.suggestion || "No suggestion available.",
           impactScore: issue.impact_display || `+${numericImpact.toFixed(2)}%`,
-          rawJson: issue,
+          rawJson: issue || {},
         },
       });
     }
@@ -140,7 +143,7 @@ export async function POST(req: NextRequest) {
           description: "Layer 1 Advanced Analytical Engine",
           suggestion: "",
           impactScore: "0%",
-          rawJson: layer1Data,
+          rawJson: layer1Data || {},
         },
       });
     }
