@@ -253,6 +253,24 @@ const GLOSSARY = [
     term: "Feature Ablation",
     url: "https://www.geeksforgeeks.org/machine-learning/feature-selection-techniques-in-machine-learning/",
     tooltip: "Measures the performance drop when a feature is entirely removed from the model and retrained."
+  },
+  {
+    regex: /\b(kl divergence|kullback-leibler divergence)\b/i,
+    term: "KL Divergence",
+    url: "https://www.geeksforgeeks.org/kullback-leibler-divergence/",
+    tooltip: "A measure of how one probability distribution is different from a second, reference probability distribution."
+  },
+  {
+    regex: /\b(wasserstein distance|earth mover's distance)\b/i,
+    term: "Wasserstein Distance",
+    url: "https://www.geeksforgeeks.org/wasserstein-distance-in-machine-learning/",
+    tooltip: "Also known as Earth Mover's Distance. Measures the minimum cost of turning one distribution into the other."
+  },
+  {
+    regex: /\b(ks statistic|kolmogorov-smirnov)\b/i,
+    term: "KS Statistic",
+    url: "https://www.geeksforgeeks.org/kolmogorov-smirnov-test/",
+    tooltip: "A nonparametric test of the equality of continuous, one-dimensional probability distributions."
   }
 ];
 
@@ -1247,7 +1265,7 @@ export default function ResultsPage() {
                         <GitBranch className="w-16 h-16 text-red-500 mx-auto mb-6" />
                         <h3 className="text-3xl font-bold mb-4 text-neutral-900">Data Drift Detection</h3>
                         <p className="text-lg text-neutral-600 w-full max-w-2xl mx-auto leading-relaxed">
-                            <RichText content="Upload your Test or Production dataset to compare against this Training dataset. We use the Population Stability Index (PSI) to instantly detect if your feature distributions have drifted and are threatening model performance." />
+                            <RichText content="Upload your Test or Production dataset to compare against this Training dataset. We use Population Stability Index (PSI), KL Divergence, Wasserstein Distance, and the KS Statistic to instantly detect if your feature distributions have drifted and are threatening model performance." />
                         </p>
                     </div>
 
