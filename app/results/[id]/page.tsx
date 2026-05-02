@@ -849,7 +849,7 @@ export default function ResultsPage() {
                                             <YAxis dataKey="value" name="Value" domain={['auto', 'auto']} tick={{fontSize: 10}} width={40} />
                                             <XAxis dataKey="jitter" type="number" hide domain={[-2, 2]} />
                                             <ZAxis range={[30, 30]} />
-                                            <Tooltip cursor={{strokeDasharray: '3 3'}} contentStyle={{borderRadius: '8px', fontSize: '12px'}} formatter={(val: number) => val.toFixed(2)} labelFormatter={() => 'Outlier'} />
+                                            <Tooltip cursor={{strokeDasharray: '3 3'}} contentStyle={{borderRadius: '8px', fontSize: '12px'}} formatter={(val: any) => typeof val === 'number' ? val.toFixed(2) : val} labelFormatter={() => 'Outlier'} />
                                             <Scatter name="Outliers" data={scatterData} fill="#ef4444">
                                                 {scatterData.map((entry: any, index: number) => (
                                                     <Cell key={`cell-${index}`} fill="#ef4444" opacity={0.6} />
