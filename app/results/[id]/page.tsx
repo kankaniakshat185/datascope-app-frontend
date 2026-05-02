@@ -221,7 +221,7 @@ const GLOSSARY = [
   {
     regex: /\b(isolation forest)\b/i,
     term: "Isolation Forest",
-    url: "https://www.geeksforgeeks.org/isolation-forest-for-anomaly-detection/",
+    url: "https://www.geeksforgeeks.org/machine-learning/what-is-isolation-forest/",
     tooltip: "An anomaly detection algorithm that isolates outliers by randomly selecting a feature and a split value."
   },
   {
@@ -239,19 +239,19 @@ const GLOSSARY = [
   {
     regex: /\b(mad|median absolute deviation)\b/i,
     term: "MAD (Median Absolute Deviation)",
-    url: "https://www.geeksforgeeks.org/robust-scaler-in-machine-learning/",
+    url: "https://www.geeksforgeeks.org/maths/mean-absolute-deviation/",
     tooltip: "A robust measure of the variability of a univariate sample of quantitative data."
   },
   {
     regex: /\b(permutation impact|permutation importance)\b/i,
     term: "Permutation Importance",
-    url: "https://www.geeksforgeeks.org/machine-learning/permutation-importance-in-machine-learning/",
+    url: "https://www.geeksforgeeks.org/machine-learning/machine-learning-explainability-using-permutation-importance/",
     tooltip: "Measures the decrease in a model score when a single feature value is randomly shuffled."
   },
   {
     regex: /\b(ablation drop|feature ablation)\b/i,
     term: "Feature Ablation",
-    url: "https://www.geeksforgeeks.org/ablation-studies-in-machine-learning/",
+    url: "https://www.geeksforgeeks.org/machine-learning/feature-selection-techniques-in-machine-learning/",
     tooltip: "Measures the performance drop when a feature is entirely removed from the model and retrained."
   }
 ];
@@ -736,6 +736,9 @@ export default function ResultsPage() {
                       
                       {layer1Data.feature_importance.insights && (
                           <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                              <p className="text-sm text-amber-900 mb-4 pb-2 border-b border-amber-200/50">
+                                  <RichText content="The metrics below measure feature importance via Permutation Impact and Feature Ablation." />
+                              </p>
                               {layer1Data.feature_importance.insights.map((insight: string, idx: number) => (
                                   <div key={idx} className="text-amber-800 font-medium flex gap-2 items-start">
                                       <CheckCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5"/> 
@@ -751,11 +754,11 @@ export default function ResultsPage() {
                                   <span className="font-bold text-neutral-800">{feat}</span>
                                   <div className="flex gap-6">
                                       <div className="text-right">
-                                          <p className="text-[10px] uppercase font-bold text-neutral-400"><RichText content="Permutation Impact" /></p>
+                                          <p className="text-[10px] uppercase font-bold text-neutral-400">Permutation Impact</p>
                                           <p className="text-sm font-black text-blue-600">{(metrics.importance_score * 100).toFixed(2)}%</p>
                                       </div>
                                       <div className="text-right">
-                                          <p className="text-[10px] uppercase font-bold text-neutral-400"><RichText content="Ablation Drop" /></p>
+                                          <p className="text-[10px] uppercase font-bold text-neutral-400">Ablation Drop</p>
                                           <p className="text-sm font-black text-red-600">{(metrics.performance_impact * 100).toFixed(2)}%</p>
                                       </div>
                                   </div>
@@ -827,7 +830,7 @@ export default function ResultsPage() {
 
                 {edaView === 'categorical' && edaData.value_counts && Object.keys(edaData.value_counts).length > 0 && (
                    <div className="mt-16">
-                      <h3 className="text-2xl font-bold mb-8 flex items-center gap-3 border-b pb-4"><BarChart3 className="w-7 h-7 text-blue-400"/> Top Categories</h3>
+                      <h4 className="text-xl font-bold mb-8 text-neutral-800 border-b pb-4">Top Categories</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {Object.entries(edaData.value_counts).map(([col, data]: [string, any]) => {
                             const chartData = data.labels.map((lbl: string, i: number) => ({
@@ -910,7 +913,17 @@ export default function ResultsPage() {
                 {edaView === 'correlation' && edaData.correlation_matrix && (
                    <div className="animate-in fade-in overflow-x-auto">
                       <h4 className="text-xl font-bold mb-8 text-neutral-800 border-b pb-4">Correlation Heatmap</h4>
-                      <p className="text-sm text-neutral-500 mb-6 italic">Dark red indicates strong positive correlation, dark blue indicates strong negative correlation.</p>
+                      <div className="flex flex-wrap items-center gap-4 mb-6 bg-neutral-50 p-3 rounded-lg border border-neutral-100 inline-flex">
+                          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Correlation Legend:</span>
+                          <div className="flex items-center text-xs">
+                              <div className="w-5 h-3 bg-blue-600 rounded-sm shadow-inner border border-black/10"></div>
+                              <span className="ml-2 mr-4 font-mono font-medium text-neutral-600">-1.0 (Strong Negative)</span>
+                              <div className="w-5 h-3 bg-white border border-neutral-300 rounded-sm"></div>
+                              <span className="ml-2 mr-4 font-mono font-medium text-neutral-600">0.0 (No Correlation)</span>
+                              <div className="w-5 h-3 bg-red-600 rounded-sm shadow-inner border border-black/10"></div>
+                              <span className="ml-2 font-mono font-medium text-neutral-600">+1.0 (Strong Positive)</span>
+                          </div>
+                      </div>
                       <div className="inline-block border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
                           <table className="text-xs text-center border-collapse">
                               <thead>
@@ -971,7 +984,7 @@ export default function ResultsPage() {
                 <div className="relative z-10 text-neutral-900 w-full">
                     <div className="text-center mb-10">
                         <Sparkles className="w-16 h-16 text-green-600 mx-auto mb-6" />
-                        <h3 className="text-3xl font-bold mb-4">Pipeline Builder</h3>
+                        <h3 className="text-3xl font-bold mb-4">Auto Clean</h3>
                         <p className="text-neutral-600 text-lg max-w-2xl mx-auto mb-8 w-full leading-relaxed">
                             <RichText content="Configure a robust data pipeline to automatically clean and transform your dataset. Select your desired steps below, and the DataScope Engine will execute them sequentially." />
                         </p>
@@ -1050,16 +1063,14 @@ export default function ResultsPage() {
                         </div>
                     </div>
 
-                    <div className="text-center">
-                        <button 
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={cleaning}
-                            className="inline-flex items-center gap-3 bg-neutral-900 hover:bg-neutral-800 text-white px-12 py-4 rounded-full font-bold text-xl shadow-xl transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Sparkles className="w-6 h-6" />
-                            {cleaning ? "Cleaning Dataset..." : "Select File & Clean"}
-                        </button>
-                        <p className="text-xs text-neutral-500 mt-4 font-medium uppercase tracking-widest">Secure local processing • No data storage</p>
+                    <div className="flex flex-col items-center gap-6 mb-8 max-w-xl mx-auto">
+                        <div className="w-full">
+                            <button onClick={() => fileInputRef.current?.click()} disabled={cleaning} className={`w-full py-8 border-2 border-dashed rounded-3xl font-bold transition flex flex-col items-center justify-center gap-3 ${cleaning ? 'opacity-50 cursor-not-allowed border-neutral-300 bg-neutral-50 text-neutral-500' : 'border-neutral-300 hover:bg-neutral-50 text-neutral-600 hover:border-neutral-400'}`}>
+                                <FileDown className={`w-8 h-8 mb-1 ${cleaning ? 'text-neutral-400 animate-pulse' : 'text-neutral-500 opacity-70'}`} />
+                                <span className="text-lg">{cleaning ? "Cleaning Dataset..." : "Select File to Clean"}</span>
+                            </button>
+                        </div>
+                        <p className="text-xs text-neutral-500 font-medium uppercase tracking-widest">Secure local processing • No data storage</p>
                     </div>
                 </div>
             </div>
