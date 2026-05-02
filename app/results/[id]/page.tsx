@@ -4,7 +4,7 @@ import { useEffect, useState, ReactNode, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
 import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles, GitBranch, LogOut, FileDown } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label, ScatterChart, Scatter, ZAxis, Cell } from "recharts";
 
 type Issue = {
   id: string;
@@ -604,6 +604,7 @@ export default function ResultsPage() {
                          <th className="py-3 px-4 font-semibold text-sm text-neutral-600">Column Name</th>
                          <th className="py-3 px-4 font-semibold text-sm text-neutral-600">Data Type</th>
                          <th className="py-3 px-4 font-semibold text-sm text-neutral-600">Missing</th>
+                         <th className="py-3 px-4 font-semibold text-sm text-neutral-600">Outlier %</th>
                          <th className="py-3 px-4 font-semibold text-sm text-neutral-600">Unique</th>
                          <th className="py-3 px-4 font-semibold text-sm text-neutral-600">Sample / Stats</th>
                       </tr>
@@ -618,6 +619,13 @@ export default function ResultsPage() {
                             <td className="py-3 px-4">
                                {col.missing_percentage > 0 ? (
                                    <span className="text-red-500 text-sm font-medium bg-red-50 px-2 py-1 rounded-md">{col.missing_percentage}% ({col.missing_count})</span>
+                               ) : (
+                                   <span className="text-neutral-400 text-sm px-2 py-1">0%</span>
+                               )}
+                            </td>
+                            <td className="py-3 px-4">
+                               {col.outlier_percentage > 0 ? (
+                                   <span className="text-amber-600 text-sm font-medium bg-amber-50 px-2 py-1 rounded-md">{col.outlier_percentage}%</span>
                                ) : (
                                    <span className="text-neutral-400 text-sm px-2 py-1">0%</span>
                                )}
@@ -732,7 +740,19 @@ export default function ResultsPage() {
                    </p>
                 </div>
 
-                {edaData.distributions && Object.keys(edaData.distributions).length > 0 && (
+                <div className="flex justify-center gap-4 mb-10">
+                    {['numerical', 'categorical', 'outlier', 'correlation'].map((view) => (
+                        <button
+                            key={view}
+                            onClick={() => setEdaView(view as any)}
+                            className={`px-6 py-2 rounded-full font-bold uppercase tracking-wider text-xs transition-all ${edaView === view ? 'bg-blue-600 text-white shadow-md' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}
+                        >
+                            {view} Plots
+                        </button>
+                    ))}
+                </div>
+
+                {edaView === 'numerical' && edaData.distributions && Object.keys(edaData.distributions).length > 0 && (
                    <div className="mb-16">
                       <h4 className="text-xl font-bold mb-8 text-neutral-800 border-b pb-4">Numeric Distributions</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -766,7 +786,7 @@ export default function ResultsPage() {
                    </div>
                 )}
 
-                {edaData.value_counts && Object.keys(edaData.value_counts).length > 0 && (
+                {edaView === 'categorical' && edaData.value_counts && Object.keys(edaData.value_counts).length > 0 && (
                    <div className="mt-16">
                       <h3 className="text-2xl font-bold mb-8 flex items-center gap-3 border-b pb-4"><BarChart3 className="w-7 h-7 text-blue-400"/> Top Categories</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -797,6 +817,108 @@ export default function ResultsPage() {
                                 </div>
                             );
                         })}
+                      </div>
+                   </div>
+                )}
+
+                {edaView === 'outlier' && edaData.outlier_plots && Object.keys(edaData.outlier_plots).length > 0 && (
+                   <div className="animate-in fade-in">
+                      <h4 className="text-xl font-bold mb-8 text-neutral-800 border-b pb-4">Outlier Detection Plots</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {Object.entries(edaData.outlier_plots).map(([col, data]: [string, any]) => {
+                            // Format data for simple 1D scatter with random jitter
+                            const scatterData = data.outliers.map((val: number, i: number) => ({
+                                id: i,
+                                value: val,
+                                jitter: Math.random() * 2 - 1
+                            }));
+                            
+                            return (
+                                <div key={col} className="bg-neutral-50 p-6 rounded-xl border border-neutral-100 relative">
+                                   <h4 className="font-semibold text-center mb-4 text-neutral-700">{col}</h4>
+                                   <div className="flex justify-between text-[10px] text-neutral-500 font-mono mb-2 uppercase tracking-widest">
+                                       <span>Min: {data.min.toFixed(2)}</span>
+                                       <span>Median: {data.median.toFixed(2)}</span>
+                                       <span>Max: {data.max.toFixed(2)}</span>
+                                   </div>
+                                   <div className="h-64 mt-4 border-l-2 border-neutral-200">
+                                       <ResponsiveContainer width="100%" height="100%">
+                                          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 10 }}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <YAxis dataKey="value" name="Value" domain={['auto', 'auto']} tick={{fontSize: 10}} width={40} />
+                                            <XAxis dataKey="jitter" type="number" hide domain={[-2, 2]} />
+                                            <ZAxis range={[30, 30]} />
+                                            <Tooltip cursor={{strokeDasharray: '3 3'}} contentStyle={{borderRadius: '8px', fontSize: '12px'}} formatter={(val: number) => val.toFixed(2)} labelFormatter={() => 'Outlier'} />
+                                            <Scatter name="Outliers" data={scatterData} fill="#ef4444">
+                                                {scatterData.map((entry: any, index: number) => (
+                                                    <Cell key={`cell-${index}`} fill="#ef4444" opacity={0.6} />
+                                                ))}
+                                            </Scatter>
+                                            {/* Add a central reference line for median */}
+                                          </ScatterChart>
+                                       </ResponsiveContainer>
+                                   </div>
+                                   <div className="absolute top-4 right-4 text-xs font-bold bg-red-100 text-red-700 px-2 py-1 rounded">
+                                       {data.outliers.length} anomalies
+                                   </div>
+                                </div>
+                            );
+                        })}
+                      </div>
+                   </div>
+                )}
+
+                {edaView === 'correlation' && edaData.correlation_matrix && (
+                   <div className="animate-in fade-in overflow-x-auto">
+                      <h4 className="text-xl font-bold mb-8 text-neutral-800 border-b pb-4">Correlation Heatmap</h4>
+                      <p className="text-sm text-neutral-500 mb-6 italic">Dark red indicates strong positive correlation, dark blue indicates strong negative correlation.</p>
+                      <div className="inline-block border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
+                          <table className="text-xs text-center border-collapse">
+                              <thead>
+                                  <tr>
+                                      <th className="p-3 bg-neutral-100 border-r border-b border-neutral-200 text-neutral-500 font-bold max-w-[120px] truncate"></th>
+                                      {edaData.correlation_matrix.columns.map((col: string) => (
+                                          <th key={col} className="p-3 bg-neutral-100 border-b border-r border-neutral-200 text-neutral-700 font-bold max-w-[100px] truncate" title={col}>
+                                              {col.length > 10 ? col.substring(0,8)+'..' : col}
+                                          </th>
+                                      ))}
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  {edaData.correlation_matrix.columns.map((rowCol: string, i: number) => (
+                                      <tr key={rowCol}>
+                                          <th className="p-3 bg-neutral-100 border-r border-b border-neutral-200 text-neutral-700 font-bold text-left max-w-[120px] truncate" title={rowCol}>
+                                              {rowCol.length > 12 ? rowCol.substring(0,10)+'..' : rowCol}
+                                          </th>
+                                          {edaData.correlation_matrix.matrix[i].map((val: number, j: number) => {
+                                              // Compute color (Red for positive, Blue for negative)
+                                              let bgColor = '#ffffff';
+                                              let textColor = '#000000';
+                                              if (val > 0) {
+                                                  const intensity = Math.min(Math.floor(val * 255), 255);
+                                                  bgColor = `rgb(255, ${255 - intensity}, ${255 - intensity})`;
+                                                  if (val > 0.6) textColor = '#ffffff';
+                                              } else if (val < 0) {
+                                                  const intensity = Math.min(Math.floor(Math.abs(val) * 255), 255);
+                                                  bgColor = `rgb(${255 - intensity}, ${255 - intensity}, 255)`;
+                                                  if (val < -0.6) textColor = '#ffffff';
+                                              }
+                                              
+                                              return (
+                                                  <td 
+                                                      key={j} 
+                                                      className="p-3 border-r border-b border-neutral-200 font-mono transition-transform hover:scale-110 cursor-default"
+                                                      style={{ backgroundColor: bgColor, color: textColor }}
+                                                      title={`${rowCol} vs ${edaData.correlation_matrix.columns[j]}: ${val.toFixed(3)}`}
+                                                  >
+                                                      {val.toFixed(2)}
+                                                  </td>
+                                              );
+                                          })}
+                                      </tr>
+                                  ))}
+                              </tbody>
+                          </table>
                       </div>
                    </div>
                 )}
