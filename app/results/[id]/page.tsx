@@ -795,7 +795,7 @@ export default function ResultsPage() {
                 </div>
 
                 {edaView === 'numerical' && edaData.distributions && Object.keys(edaData.distributions).length > 0 && (
-                   <div className="mb-16">
+                   <div className="animate-in fade-in">
                       <h4 className="text-xl font-bold mb-8 text-neutral-800 border-b pb-4">Numeric Distributions</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {Object.entries(edaData.distributions).map(([col, data]: [string, any]) => {
@@ -829,7 +829,7 @@ export default function ResultsPage() {
                 )}
 
                 {edaView === 'categorical' && edaData.value_counts && Object.keys(edaData.value_counts).length > 0 && (
-                   <div className="mt-16">
+                   <div className="animate-in fade-in">
                       <h4 className="text-xl font-bold mb-8 text-neutral-800 border-b pb-4">Top Categories</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {Object.entries(edaData.value_counts).map(([col, data]: [string, any]) => {
