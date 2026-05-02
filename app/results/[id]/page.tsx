@@ -217,6 +217,42 @@ const GLOSSARY = [
     term: "Random Forest",
     url: "https://www.geeksforgeeks.org/random-forest-regression-in-python/",
     tooltip: "An ensemble learning method that operates by constructing a multitude of decision trees."
+  },
+  {
+    regex: /\b(isolation forest)\b/i,
+    term: "Isolation Forest",
+    url: "https://www.geeksforgeeks.org/isolation-forest-for-anomaly-detection/",
+    tooltip: "An anomaly detection algorithm that isolates outliers by randomly selecting a feature and a split value."
+  },
+  {
+    regex: /\b(dbscan)\b/i,
+    term: "DBSCAN",
+    url: "https://www.geeksforgeeks.org/dbscan-clustering-in-ml-density-based-clustering/",
+    tooltip: "Density-Based Spatial Clustering of Applications with Noise. Finds core samples of high density and expands clusters from them."
+  },
+  {
+    regex: /\b(z-score)\b/i,
+    term: "Z-Score",
+    url: "https://www.geeksforgeeks.org/z-score-for-outlier-detection-python/",
+    tooltip: "Measures how many standard deviations a data point is from the mean."
+  },
+  {
+    regex: /\b(mad|median absolute deviation)\b/i,
+    term: "MAD (Median Absolute Deviation)",
+    url: "https://www.geeksforgeeks.org/robust-scaler-in-machine-learning/",
+    tooltip: "A robust measure of the variability of a univariate sample of quantitative data."
+  },
+  {
+    regex: /\b(permutation impact|permutation importance)\b/i,
+    term: "Permutation Importance",
+    url: "https://www.geeksforgeeks.org/machine-learning/permutation-importance-in-machine-learning/",
+    tooltip: "Measures the decrease in a model score when a single feature value is randomly shuffled."
+  },
+  {
+    regex: /\b(ablation drop|feature ablation)\b/i,
+    term: "Feature Ablation",
+    url: "https://www.geeksforgeeks.org/ablation-studies-in-machine-learning/",
+    tooltip: "Measures the performance drop when a feature is entirely removed from the model and retrained."
   }
 ];
 
@@ -658,7 +694,7 @@ export default function ResultsPage() {
                 {layer1Data.outlier_analysis && (
                    <div className="mb-16 bg-white p-8 rounded-2xl border border-neutral-200 shadow-sm">
                       <h4 className="text-2xl font-bold mb-6 flex items-center gap-2"><AlertTriangle className="text-red-500"/> Multi-Method Outlier Consensus</h4>
-                      <p className="mb-4 text-neutral-600 font-medium">Found <span className="font-bold">{layer1Data.outlier_analysis.summary.total_outliers} outliers</span> ({layer1Data.outlier_analysis.summary.percentage_flagged.toFixed(2)}%) using consensus across Z-Score, MAD, Isolation Forest, and DBSCAN.</p>
+                      <p className="mb-4 text-neutral-600 font-medium">Found <span className="font-bold">{layer1Data.outlier_analysis.summary.total_outliers} outliers</span> ({layer1Data.outlier_analysis.summary.percentage_flagged.toFixed(2)}%) <RichText content="using consensus across Z-Score, MAD, Isolation Forest, and DBSCAN." /></p>
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                           {Object.entries(layer1Data.outlier_analysis.summary.method_flags).map(([method, pct]: any) => (
@@ -710,16 +746,16 @@ export default function ResultsPage() {
                       )}
                       
                       <div className="space-y-4">
-                          {Object.entries(layer1Data.feature_importance.features).sort((a: any, b: any) => b[1].importance_score - a[1].importance_score).slice(0, 5).map(([feat, metrics]: any) => (
-                              <div key={feat} className="flex justify-between items-center p-4 bg-neutral-50 rounded-lg border border-neutral-100">
+                          {Object.entries(layer1Data.feature_importance.features).sort((a: any, b: any) => b[1].importance_score - a[1].importance_score).map(([feat, metrics]: any) => (
+                              <div key={feat} className="flex justify-between items-center p-4 bg-neutral-50 rounded-lg border border-neutral-100 hover:shadow-sm transition">
                                   <span className="font-bold text-neutral-800">{feat}</span>
                                   <div className="flex gap-6">
                                       <div className="text-right">
-                                          <p className="text-[10px] uppercase font-bold text-neutral-400">Permutation Impact</p>
+                                          <p className="text-[10px] uppercase font-bold text-neutral-400"><RichText content="Permutation Impact" /></p>
                                           <p className="text-sm font-black text-blue-600">{(metrics.importance_score * 100).toFixed(2)}%</p>
                                       </div>
                                       <div className="text-right">
-                                          <p className="text-[10px] uppercase font-bold text-neutral-400">Ablation Drop</p>
+                                          <p className="text-[10px] uppercase font-bold text-neutral-400"><RichText content="Ablation Drop" /></p>
                                           <p className="text-sm font-black text-red-600">{(metrics.performance_impact * 100).toFixed(2)}%</p>
                                       </div>
                                   </div>
@@ -741,16 +777,18 @@ export default function ResultsPage() {
                    </p>
                 </div>
 
-                <div className="flex justify-center gap-4 mb-10">
-                    {['numerical', 'categorical', 'outlier', 'correlation'].map((view) => (
-                        <button
-                            key={view}
-                            onClick={() => setEdaView(view as any)}
-                            className={`px-6 py-2 rounded-full font-bold uppercase tracking-wider text-xs transition-all ${edaView === view ? 'bg-blue-600 text-white shadow-md' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}
-                        >
-                            {view} Plots
-                        </button>
-                    ))}
+                <div className="flex justify-center mb-10">
+                    <div className="bg-neutral-200/50 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-neutral-200">
+                        {['numerical', 'categorical', 'outlier', 'correlation'].map((view) => (
+                            <button
+                                key={view}
+                                onClick={() => setEdaView(view as any)}
+                                className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 uppercase tracking-wide text-xs ${edaView === view ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
+                            >
+                                {view} Plots
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {edaView === 'numerical' && edaData.distributions && Object.keys(edaData.distributions).length > 0 && (
@@ -1202,28 +1240,30 @@ export default function ResultsPage() {
                         </p>
                     </div>
 
-                    <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-12">
-                        <div className="flex flex-col gap-2 w-full md:w-auto">
-                            <input type="file" ref={driftRefInput} className="hidden" onChange={(e) => setDriftRefFile(e.target.files?.[0] || null)} accept=".csv,.xlsx,.xls,.json,.parquet" />
-                            <button onClick={() => driftRefInput.current?.click()} className="inline-flex items-center gap-3 bg-neutral-900 hover:bg-neutral-800 text-white px-10 py-4 rounded-full font-bold text-xl shadow-xl transition-all hover:-translate-y-1">
-                                <Sparkles className="w-5 h-5" />
-                                {driftRefFile ? driftRefFile.name : "1. Upload Training Data"}
-                            </button>
-                        </div>
-                        <div className="flex flex-col gap-2 w-full md:w-auto">
-                            <input type="file" ref={driftTestInput} className="hidden" onChange={(e) => setDriftTestFile(e.target.files?.[0] || null)} accept=".csv,.xlsx,.xls,.json,.parquet" />
-                            <button onClick={() => driftTestInput.current?.click()} className="inline-flex items-center gap-3 bg-neutral-900 hover:bg-neutral-800 text-white px-10 py-4 rounded-full font-bold text-xl shadow-xl transition-all hover:-translate-y-1">
-                                <Sparkles className="w-5 h-5" />
-                                {driftTestFile ? driftTestFile.name : "2. Upload Prod Data"}
-                            </button>
+                    <div className="flex flex-col items-center gap-8 mb-12 max-w-2xl mx-auto">
+                        <div className="flex flex-row gap-6 w-full justify-center">
+                            <div className="flex-1">
+                                <input type="file" ref={driftRefInput} className="hidden" onChange={(e) => setDriftRefFile(e.target.files?.[0] || null)} accept=".csv,.xlsx,.xls,.json,.parquet" />
+                                <button onClick={() => driftRefInput.current?.click()} className={`w-full py-6 border-2 border-dashed rounded-2xl font-bold transition flex flex-col items-center justify-center gap-2 ${driftRefFile ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-neutral-300 hover:bg-neutral-50 text-neutral-600 hover:border-neutral-400'}`}>
+                                    <FileDown className="w-6 h-6 mb-1 opacity-70" />
+                                    {driftRefFile ? driftRefFile.name : "1. Upload Training Data"}
+                                </button>
+                            </div>
+                            <div className="flex-1">
+                                <input type="file" ref={driftTestInput} className="hidden" onChange={(e) => setDriftTestFile(e.target.files?.[0] || null)} accept=".csv,.xlsx,.xls,.json,.parquet" />
+                                <button onClick={() => driftTestInput.current?.click()} className={`w-full py-6 border-2 border-dashed rounded-2xl font-bold transition flex flex-col items-center justify-center gap-2 ${driftTestFile ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-neutral-300 hover:bg-neutral-50 text-neutral-600 hover:border-neutral-400'}`}>
+                                    <FileDown className="w-6 h-6 mb-1 opacity-70" />
+                                    {driftTestFile ? driftTestFile.name : "2. Upload Prod Data"}
+                                </button>
+                            </div>
                         </div>
                         
                         <button 
                             onClick={handleRunDrift}
                             disabled={driftLoading || !driftRefFile || !driftTestFile}
-                            className="inline-flex items-center gap-3 bg-neutral-900 hover:bg-neutral-800 text-white px-10 py-4 rounded-xl font-bold shadow-xl transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center gap-3 bg-neutral-900 hover:bg-neutral-800 text-white px-16 py-4 rounded-full font-bold text-xl shadow-xl transition-all hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <GitBranch className="w-5 h-5" />
+                            <GitBranch className="w-6 h-6" />
                             {driftLoading ? "Analyzing..." : "Run Multi-Metric Drift"}
                         </button>
                     </div>
