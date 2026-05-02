@@ -263,13 +263,13 @@ const GLOSSARY = [
   {
     regex: /\b(wasserstein distance|earth mover's distance)\b/i,
     term: "Wasserstein Distance",
-    url: "https://www.geeksforgeeks.org/wasserstein-distance-in-machine-learning/",
+    url: "https://en.wikipedia.org/wiki/Wasserstein_metric",
     tooltip: "Also known as Earth Mover's Distance. Measures the minimum cost of turning one distribution into the other."
   },
   {
     regex: /\b(ks statistic|kolmogorov-smirnov)\b/i,
     term: "KS Statistic",
-    url: "https://www.geeksforgeeks.org/kolmogorov-smirnov-test/",
+    url: "https://www.geeksforgeeks.org/machine-learning/kolmogorov-smirnov-test-ks-test/",
     tooltip: "A nonparametric test of the equality of continuous, one-dimensional probability distributions."
   }
 ];
