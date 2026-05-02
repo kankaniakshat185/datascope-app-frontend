@@ -275,6 +275,7 @@ export default function ResultsPage() {
   const [data, setData] = useState<DatasetResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'issues' | 'dictionary' | 'eda' | 'remediation' | 'drift' | 'layer1'>('issues');
+  const [edaView, setEdaView] = useState<'numerical' | 'categorical' | 'outlier' | 'correlation'>('numerical');
   const [cleaning, setCleaning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [driftLoading, setDriftLoading] = useState(false);
