@@ -54,14 +54,6 @@ Skip the local setup. The DataScope frontend is fully deployed and ready to use.
 
 - **Live Platform**: [Access DataScope](https://datascope-app.vercel.app/)
 
-## Deployment
-
-The frontend is optimized for zero-configuration deployment on **Vercel**. 
-
-1. Push your code to GitHub.
-2. Import the project into Vercel.
-3. Add your `DATABASE_URL` (for Prisma) and your HuggingFace backend URL to the Vercel Environment Variables.
-4. Deploy!
 
 ## License
 
