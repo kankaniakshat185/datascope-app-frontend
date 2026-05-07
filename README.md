@@ -1,6 +1,6 @@
 # DataScope Analytical Engine
 
-![DataScope Dashboard](assets/hero.png)
+![DataScope Dashboard](https://github.com/kankaniakshat185/datascope-app-frontend/blob/main/hero.png)
 
 A robust, intelligent machine learning dataset evaluation and debugging backend built in FastAPI. It automatically detects dataset issues, calculates precise ML impact scores through dynamic baseline modeling, and provides configurable, consensus-driven data-cleaning and drift-detection pipelines.
 
