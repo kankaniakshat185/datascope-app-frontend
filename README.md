@@ -6,7 +6,7 @@ The high-fidelity, interactive frontend for the DataScope ML Platform. Built wit
 
 <div align="center">
 
-[Features](#features) • [Design System](#design-system) • [Architecture](#architecture) • [Getting Started](#getting-started) • [Deployment](#deployment)
+[Features](#features) • [Design System](#design-system) • [Architecture](#architecture) • [Live Access](#live-access) • [Deployment](#deployment)
 
 </div>
 
@@ -48,30 +48,11 @@ DataScope Client is built for speed, type-safety, and seamless API integration.
 └── hero.png              # README banner image
 ```
 
-## Getting Started
+## Live Access
 
-### Prerequisites
-- Node.js 18+
-- A running instance of the [DataScope Backend](https://github.com/kankaniakshat185/datascope-hf-backend) (or use the live HuggingFace API).
+Skip the local setup. The DataScope frontend is fully deployed and ready to use. 
 
-### Local Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/kankaniakshat185/datascope-app-frontend.git
-cd data-debugger-frontend
-
-# Install dependencies
-npm install
-
-# Generate Prisma Client for Vault Database
-npx prisma generate
-
-# Run the development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the application in your browser.
+- **Live Platform**: [Access DataScope](https://datascope-app.vercel.app/)
 
 ## Deployment
 
