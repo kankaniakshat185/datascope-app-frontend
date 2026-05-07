@@ -1,4 +1,4 @@
-# DataScope Analytical Engine
+# DataScope 
 
 ![DataScope Dashboard](https://github.com/kankaniakshat185/datascope-app-frontend/blob/main/hero.png)
 
