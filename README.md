@@ -1,10 +1,14 @@
-# DataScope 
+# DataScope Analytical Engine
 
 ![DataScope Dashboard](https://github.com/kankaniakshat185/datascope-app-frontend/blob/main/hero.png)
 
 A robust, intelligent machine learning dataset evaluation and debugging backend built in FastAPI. It automatically detects dataset issues, calculates precise ML impact scores through dynamic baseline modeling, and provides configurable, consensus-driven data-cleaning and drift-detection pipelines.
 
-[Features](#features) • [Live Access & Docs](#live-access--docs) • [Architecture](#architecture) • [Layer 1 Engines](#layer-1-engines) • [API Reference](#api-reference)
+<div align="center">
+
+[Features](#features) • [Live Access & Docs](#live-access--docs) • [Architecture](#architecture) • [Layer 1 Engines](#layer-1-engines) • [Benchmarks](#benchmarks--optimizations) • [API Reference](#api-reference)
+
+</div>
 
 ---
 
@@ -83,7 +87,13 @@ Replaces naive statistical bounds with a highly robust **Consensus Algorithm**. 
 2. **Machine Learning**: Isolation Forest (Tree-based) and DBSCAN (Density-based clustering).
 
 ### SHAP / Model Intelligence Engine (`layer1/services/shap_engine.py`)
-Provides segmented model intelligence. It quickly calculates native Random Forest feature importances mimicking SHAP behaviors, intentionally optimized for low-memory overhead to support Vercel Serverless deployments.
+Provides segmented model intelligence. It quickly calculates native Random Forest feature importances mimicking SHAP behaviors, intentionally optimized for low-memory overhead to support HuggingFace Spaces deployments.
+
+## Benchmarks & Optimizations
+
+- **HuggingFace Spaces Optimization**: Native `scikit-learn` feature importances are utilized in the SHAP Engine instead of the heavy `shap` library, saving over **200MB+** of RAM and allowing the intelligence engine to run smoothly within strict HuggingFace memory constraints.
+- **Vectorized Drift Computation**: PSI, Kullback-Leibler, and Wasserstein distance calculations are fully vectorized using NumPy and SciPy, ensuring near-instantaneous execution even on large production datasets.
+- **Zero-Disk I/O Auto-Cleaning**: The 5-Step Pipeline Engine processes and returns cleaned datasets via an in-memory `io.StringIO` stream, eliminating disk write latencies.
 
 ## Project Structure
 
