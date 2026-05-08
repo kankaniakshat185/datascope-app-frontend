@@ -161,7 +161,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1 max-w-3xl mx-auto mt-32 px-6">
-        <h2 className="text-5xl font-extrabold mb-4 text-center text-neutral-900 tracking-tight">Look Beyond the Numbers</h2>
+        <h2 className="text-5xl font-extrabold mb-4 text-center text-neutral-900 tracking-tight">Beyond the Numbers</h2>
         <p className="text-neutral-500 mb-10 text-center text-lg leading-relaxed max-w-lg mx-auto">Detect what’s broken, discover what matters, and refine what remains.</p>
 
         <div className="p-4 bg-white rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border-2 border-black flex items-center justify-between gap-4">
