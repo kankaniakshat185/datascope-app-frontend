@@ -330,6 +330,8 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'issues' | 'dictionary' | 'eda' | 'remediation' | 'drift' | 'layer1'>('issues');
   const [edaView, setEdaView] = useState<'numerical' | 'categorical' | 'outlier' | 'correlation'>('numerical');
+  const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
+  const [issueFilter, setIssueFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
   const [cleaning, setCleaning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [driftLoading, setDriftLoading] = useState(false);
@@ -1149,11 +1151,33 @@ export default function ResultsPage() {
                                 </div>
                             )}
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {Object.entries(shapData.clusters).map(([clusterName, clusterInfo]: any) => (
-                                    <div key={clusterName} className="p-6 bg-neutral-50 rounded-2xl border border-neutral-100 shadow-inner">
-                                        <h4 className="font-black text-lg text-neutral-800 mb-4 pb-2 border-b uppercase tracking-tight">{clusterName}</h4>
-                                        <div className="space-y-4">
+                            <div className="text-sm text-neutral-500 mb-6 font-medium text-center bg-white p-3 rounded-lg border border-neutral-100 shadow-sm">
+                                <span className="text-emerald-600 font-bold mr-1">💡 What do these percentages mean?</span> 
+                                They represent the relative influence of each feature on the model's predictions specifically for this segment of data.
+                            </div>
+
+                            <div className="flex justify-center mb-6">
+                                <div className="bg-neutral-100 p-1.5 rounded-2xl flex items-center gap-1 border border-neutral-200">
+                                    {Object.keys(shapData.clusters).map((clusterName) => {
+                                        const isSelected = selectedCluster === clusterName || (!selectedCluster && clusterName === Object.keys(shapData.clusters)[0]);
+                                        return (
+                                            <button 
+                                                key={clusterName}
+                                                onClick={() => setSelectedCluster(clusterName)}
+                                                className={`px-6 py-2 rounded-xl font-bold transition-all text-sm uppercase tracking-wider ${isSelected ? 'bg-white text-emerald-700 shadow-sm border border-neutral-200/50' : 'text-neutral-500 hover:text-neutral-800'}`}
+                                            >
+                                                {clusterName.replace('_', ' ')}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                {Object.entries(shapData.clusters).filter(([cName]) => selectedCluster === cName || (!selectedCluster && cName === Object.keys(shapData.clusters)[0])).map(([clusterName, clusterInfo]: any) => (
+                                    <div key={clusterName} className="p-8 bg-neutral-50 rounded-2xl border border-neutral-100 shadow-inner max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-300">
+                                        <h4 className="font-black text-xl text-neutral-800 mb-6 pb-2 border-b-2 uppercase tracking-tight text-center">{clusterName.replace('_', ' ')} Drivers</h4>
+                                        <div className="space-y-5">
                                             {clusterInfo.top_features.map((feature: string) => {
                                                 const importance = clusterInfo.feature_importance[feature];
                                                 const maxVal = Math.max(...(Object.values(clusterInfo.feature_importance) as number[]));
@@ -1161,11 +1185,11 @@ export default function ResultsPage() {
                                                 
                                                 return (
                                                     <div key={feature} className="flex flex-col gap-1.5">
-                                                        <div className="flex justify-between items-center text-xs font-bold text-neutral-600 uppercase tracking-wide">
+                                                        <div className="flex justify-between items-center text-sm font-bold text-neutral-600 uppercase tracking-wide">
                                                             <span className="truncate pr-4">{feature}</span>
                                                             <span className="text-emerald-600">{(importance * 100).toFixed(1)}%</span>
                                                         </div>
-                                                        <div className="h-2 bg-neutral-200 rounded-full overflow-hidden shadow-inner">
+                                                        <div className="h-3 bg-neutral-200 rounded-full overflow-hidden shadow-inner">
                                                             <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: `${width}%` }}></div>
                                                         </div>
                                                     </div>
@@ -1216,9 +1240,19 @@ export default function ResultsPage() {
                 )}
             </div>
 
+            <div className="flex justify-center mb-8">
+                <div className="bg-neutral-100 p-1.5 rounded-2xl flex items-center gap-1 border border-neutral-200 shadow-inner">
+                    <button onClick={() => setIssueFilter('ALL')} className={`px-6 py-2 rounded-xl font-bold transition-all text-sm tracking-wide ${issueFilter === 'ALL' ? 'bg-white text-black shadow-sm border border-neutral-200/50' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}>All Issues</button>
+                    <button onClick={() => setIssueFilter('HIGH')} className={`px-6 py-2 rounded-xl font-bold transition-all text-sm tracking-wide flex items-center gap-2 ${issueFilter === 'HIGH' ? 'bg-red-50 text-red-700 shadow-sm border border-red-100' : 'text-neutral-500 hover:text-red-700 hover:bg-red-50/50'}`}><AlertCircle className="w-4 h-4"/> High Priority</button>
+                    <button onClick={() => setIssueFilter('MEDIUM')} className={`px-6 py-2 rounded-xl font-bold transition-all text-sm tracking-wide flex items-center gap-2 ${issueFilter === 'MEDIUM' ? 'bg-yellow-50 text-yellow-700 shadow-sm border border-yellow-100' : 'text-neutral-500 hover:text-yellow-700 hover:bg-yellow-50/50'}`}><AlertTriangle className="w-4 h-4"/> Medium Priority</button>
+                    <button onClick={() => setIssueFilter('LOW')} className={`px-6 py-2 rounded-xl font-bold transition-all text-sm tracking-wide flex items-center gap-2 ${issueFilter === 'LOW' ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100' : 'text-neutral-500 hover:text-blue-700 hover:bg-blue-50/50'}`}><CheckCircle className="w-4 h-4"/> Low Priority</button>
+                </div>
+            </div>
+
             {/* Individual Issue Cards */}
             <div className="space-y-6">
                 {actualIssues
+                  .filter(issue => issueFilter === 'ALL' || issue.severity === issueFilter)
                   .sort((a, b) => {
                       const order: Record<string, number> = { 'HIGH': 0, 'MEDIUM': 1, 'LOW': 2 };
                       return order[a.severity] - order[b.severity];
