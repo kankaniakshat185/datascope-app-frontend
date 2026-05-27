@@ -329,6 +329,7 @@ export default function ResultsPage() {
   const [data, setData] = useState<DatasetResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'issues' | 'eda' | 'remediation' | 'drift' | 'layer1' | 'l3_intelligence'>('issues');
+  const [explorerTab, setExplorerTab] = useState<'dictionary' | 'plots'>('dictionary');
   
   const searchParams = useSearchParams();
   const rcJob = searchParams.get('rcJob');
@@ -681,15 +682,35 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {activeTab === 'eda' && dataDictResult && dataDictResult.rawJson && (
-          <div className="p-12 pt-0 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 transition">
+        {activeTab === 'eda' && (
+          <div className="p-12 pt-0 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 transition max-w-7xl mx-auto">
                 <div className="text-center mb-10">
                     <Database className="w-16 h-16 text-blue-500 mx-auto mb-6" />
-                    <h3 className="text-3xl font-bold mb-4">Data Dictionary</h3>
+                    <h3 className="text-3xl font-bold mb-4">Data Explorer</h3>
                     <p className="text-lg text-neutral-600 max-w-2xl mx-auto mb-6 leading-relaxed w-full">
-                        <RichText content="The Data Dictionary provides a comprehensive overview of your dataset's structure. It highlights data types, detects missing values, and calculates key statistics for every column, helping you understand the shape and quality of your raw data at a glance." />
+                        <RichText content="The Data Explorer combines a structural Data Dictionary with visual Exploratory Data Analysis (EDA). Toggle between views to understand data types, missing values, and visual distributions." />
                     </p>
                 </div>
+                
+                <div className="flex justify-center mb-10">
+                    <div className="bg-neutral-200/50 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-neutral-200">
+                        <button
+                            onClick={() => setExplorerTab('dictionary')}
+                            className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 uppercase tracking-wide text-xs ${explorerTab === 'dictionary' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
+                        >
+                            Data Dictionary
+                        </button>
+                        <button
+                            onClick={() => setExplorerTab('plots')}
+                            className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 uppercase tracking-wide text-xs ${explorerTab === 'plots' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
+                        >
+                            EDA Plots
+                        </button>
+                    </div>
+                </div>
+
+                {explorerTab === 'dictionary' && dataDictResult && dataDictResult.rawJson && (
+                    <div className="animate-in fade-in">
              <div className="flex gap-4 mb-8 justify-center">
                 <div className="bg-blue-50 text-blue-800 px-6 py-2.5 rounded-2xl border border-blue-200 shadow-sm font-semibold">
                    <span className="font-bold text-xl mr-2">{dataDictResult.rawJson.total_rows}</span> Rows
@@ -743,8 +764,8 @@ export default function ResultsPage() {
                    </tbody>
                 </table>
              </div>
-          </div>
-        )}
+                    </div>
+                )}
 
         {activeTab === 'layer1' && layer1Data && (
           <div className="p-12 pt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -854,15 +875,8 @@ export default function ResultsPage() {
           </div>
         )}
 
-        {activeTab === 'eda' && edaData && (
-          <div className="p-12 pt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="text-center mb-16">
-                   <BarChart3 className="w-16 h-16 text-blue-500 mx-auto mb-6" />
-                   <h3 className="text-3xl font-bold mb-4">EDA Dashboard</h3>
-                   <p className="text-lg text-neutral-600 mb-2 leading-relaxed w-full max-w-2xl mx-auto">
-                      <RichText content="Exploratory Data Analysis (EDA) visualizes the distributions and relationships within your data. Use these charts to identify patterns, skewness, and category frequencies, ensuring your features are well-distributed for model training." />
-                   </p>
-                </div>
+                {explorerTab === 'plots' && edaData && (
+                    <div className="animate-in fade-in">
 
                 <div className="flex justify-center mb-10">
                     <div className="bg-neutral-200/50 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-neutral-200">
@@ -1058,7 +1072,9 @@ export default function ResultsPage() {
                       </div>
                    </div>
                 )}
-             </div>
+                    </div>
+                )}
+          </div>
         )}
 
         {activeTab === 'remediation' && (
