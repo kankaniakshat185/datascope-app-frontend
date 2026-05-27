@@ -3,7 +3,7 @@
 import { useEffect, useState, ReactNode, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
-import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles, GitBranch, LogOut, FileDown } from "lucide-react";
+import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles, GitBranch, LogOut, FileDown, Code } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label, ScatterChart, Scatter, ZAxis, Cell, LineChart, Line } from "recharts";
 
 type Issue = {
@@ -341,6 +341,7 @@ export default function ResultsPage() {
   const driftTestInput = useRef<HTMLInputElement>(null);
   const [driftRefFile, setDriftRefFile] = useState<File | null>(null);
   const [driftTestFile, setDriftTestFile] = useState<File | null>(null);
+  const [showCode, setShowCode] = useState(false);
   const [pipelineConfig, setPipelineConfig] = useState<any[]>([
     { id: "0", step: "drop_missing", params: { threshold: 0.5 } },
     { id: "1", step: "impute_missing", params: { strategy: "median" } },
@@ -364,6 +365,66 @@ export default function ResultsPage() {
           }
           return newConfig.sort((a, b) => parseInt(a.id) - parseInt(b.id));
       });
+  };
+
+  const generatePythonCode = () => {
+      let code = `import pandas as pd
+import numpy as np
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.ensemble import IsolationForest
+
+# Load your dataset
+df = pd.read_csv("your_dataset.csv")\n\n`;
+
+      if (pipelineConfig.some(s => s.id === "0")) {
+          code += `# 1. Drop Heavy Missing Columns
+threshold = 0.5
+missing_fractions = df.isnull().mean()
+cols_to_drop = missing_fractions[missing_fractions > threshold].index
+df = df.drop(columns=cols_to_drop)\n\n`;
+      }
+      
+      if (pipelineConfig.some(s => s.id === "1")) {
+          code += `# 2. Impute Missing Values
+num_cols = df.select_dtypes(include=np.number).columns
+cat_cols = df.select_dtypes(exclude=np.number).columns
+
+if len(num_cols) > 0:
+    num_imputer = SimpleImputer(strategy='median')
+    df[num_cols] = num_imputer.fit_transform(df[num_cols])
+
+if len(cat_cols) > 0:
+    cat_imputer = SimpleImputer(strategy='most_frequent')
+    df[cat_cols] = cat_imputer.fit_transform(df[cat_cols])\n\n`;
+      }
+      
+      if (pipelineConfig.some(s => s.id === "2")) {
+          code += `# 3. Remove Outliers (Simplified Isolation Forest approach)
+num_cols = df.select_dtypes(include=np.number).columns
+if len(num_cols) > 0:
+    iso = IsolationForest(contamination=0.05, random_state=42)
+    outliers = iso.fit_predict(df[num_cols])
+    df = df[outliers == 1]\n\n`;
+      }
+      
+      if (pipelineConfig.some(s => s.id === "3")) {
+          code += `# 4. Encode Categorical Features
+cat_cols = df.select_dtypes(exclude=np.number).columns
+if len(cat_cols) > 0:
+    df = pd.get_dummies(df, columns=cat_cols, drop_first=True)\n\n`;
+      }
+      
+      if (pipelineConfig.some(s => s.id === "4")) {
+          code += `# 5. Standardize Numeric Features
+num_cols = df.select_dtypes(include=np.number).columns
+if len(num_cols) > 0:
+    scaler = StandardScaler()
+    df[num_cols] = scaler.fit_transform(df[num_cols])\n\n`;
+      }
+      
+      code += `print("Dataset successfully cleaned. Shape:", df.shape)`;
+      return code;
   };
 
   const handleRunDrift = async () => {
@@ -1117,9 +1178,27 @@ export default function ResultsPage() {
                                 <FileDown className={`w-8 h-8 mb-1 ${cleaning ? 'text-neutral-400 animate-pulse' : 'text-neutral-500 opacity-70'}`} />
                                 <span className="text-lg">{cleaning ? "Cleaning Dataset..." : "Select File to Clean"}</span>
                             </button>
+                            <button onClick={() => setShowCode(!showCode)} className="w-full mt-4 py-4 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition flex items-center justify-center gap-2 shadow-lg">
+                                <Code className="w-5 h-5" />
+                                {showCode ? "Hide Python Code" : "Export to Python"}
+                            </button>
                         </div>
                         <p className="text-xs text-neutral-500 font-medium uppercase tracking-widest">Secure local processing • No data storage</p>
                     </div>
+                    </div>
+                    {showCode && (
+                        <div className="max-w-3xl mx-auto mb-10 animate-in fade-in slide-in-from-bottom-4">
+                            <div className="bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl border border-neutral-800">
+                                <div className="flex justify-between items-center px-4 py-2 bg-neutral-800 border-b border-neutral-700">
+                                    <span className="text-xs font-mono text-neutral-400">clean_dataset.py</span>
+                                    <button onClick={() => navigator.clipboard.writeText(generatePythonCode())} className="text-xs font-bold text-neutral-300 hover:text-white bg-neutral-700 px-3 py-1 rounded transition">Copy Code</button>
+                                </div>
+                                <pre className="p-6 overflow-x-auto text-sm text-green-400 font-mono leading-relaxed">
+                                    <code>{generatePythonCode()}</code>
+                                </pre>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
           </div>
