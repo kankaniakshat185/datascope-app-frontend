@@ -65,11 +65,16 @@ export async function POST(req: NextRequest) {
     const shapFormData = new FormData();
     shapFormData.append("file", new Blob([buffer], { type: file.type }), file.name);
 
+    const l3FormData = new FormData();
+    l3FormData.append("file", new Blob([buffer], { type: file.type }), file.name);
+    l3FormData.append("target_column", targetColumn);
+    l3FormData.append("problem_type", "regression"); // Defaulting to regression for now, adjust if classification needed
+
     // Add timeout protection
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
 
-    const [mlResponse, layer1Response, dictResponse, edaResponse, shapResponse] = await Promise.all([
+    const [mlResponse, layer1Response, dictResponse, edaResponse, shapResponse, rootCauseResponse, benchmarkResponse] = await Promise.all([
       fetch(`${mlServiceUrl}/analyze`, {
         method: "POST",
         body: mlFormData,
@@ -94,6 +99,16 @@ export async function POST(req: NextRequest) {
         method: "POST",
         body: shapFormData,
         signal: controller.signal,
+      }),
+      fetch(`${mlServiceUrl}/api/v3/root-cause`, {
+        method: "POST",
+        body: l3FormData,
+        signal: controller.signal,
+      }),
+      fetch(`${mlServiceUrl}/api/v3/benchmark`, {
+        method: "POST",
+        body: l3FormData,
+        signal: controller.signal,
       })
     ]);
 
@@ -108,6 +123,10 @@ export async function POST(req: NextRequest) {
     const dictData = dictResponse.ok ? await dictResponse.json() : null;
     const edaData = edaResponse.ok ? await edaResponse.json() : null;
     const shapData = shapResponse.ok ? await shapResponse.json() : null;
+    
+    // Layer 3 Job IDs
+    const rootCauseData = rootCauseResponse.ok ? await rootCauseResponse.json() : null;
+    const benchmarkData = benchmarkResponse.ok ? await benchmarkResponse.json() : null;
 
     if (!mlData?.issues || !Array.isArray(mlData.issues)) {
       throw new Error("Invalid ML response format");
@@ -211,6 +230,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       datasetId: dataset.id,
       issues: mlData.issues,
+      rootCauseJobId: rootCauseData?.job_id,
+      benchmarkJobId: benchmarkData?.job_id
     });
 
   } catch (error: any) {

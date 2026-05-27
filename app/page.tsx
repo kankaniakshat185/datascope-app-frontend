@@ -132,7 +132,10 @@ export default function Home() {
     setUploading(false);
     if (res.ok) {
       const data = await res.json();
-      router.push(`/results/${data.datasetId}`);
+      let pushUrl = `/results/${data.datasetId}?`;
+      if (data.rootCauseJobId) pushUrl += `rcJob=${data.rootCauseJobId}&`;
+      if (data.benchmarkJobId) pushUrl += `benchJob=${data.benchmarkJobId}`;
+      router.push(pushUrl);
     } else {
       try {
         const errorData = await res.json();
