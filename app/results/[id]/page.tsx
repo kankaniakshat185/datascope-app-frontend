@@ -714,113 +714,6 @@ export default function ResultsPage() {
                     </div>
                 )}
 
-        {activeTab === 'layer1' && layer1Data && (
-          <div className="p-12 pt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="text-center mb-16">
-                   <Activity className="w-16 h-16 text-indigo-500 mx-auto mb-6" />
-                   <h3 className="text-3xl font-bold mb-4">Deep Machine Learning Analytics</h3>
-                   <p className="text-lg text-neutral-600 mb-2 leading-relaxed max-w-2xl mx-auto">
-                      <RichText content="Multi-method outlier detection and causal feature impact analysis powered by the Layer 1 Engine." />
-                   </p>
-                </div>
-                
-                {layer1Data.outlier_analysis && (
-                   <div className="mb-16 bg-white p-8 rounded-2xl border border-neutral-200 shadow-sm">
-                      <h4 className="text-2xl font-bold mb-6 flex items-center gap-2"><AlertTriangle className="text-red-500"/> Multi-Method Outlier Consensus</h4>
-                      <p className="mb-4 text-neutral-600 font-medium">Found <span className="font-bold">{layer1Data.outlier_analysis.summary.total_outliers} outliers</span> ({layer1Data.outlier_analysis.summary.percentage_flagged.toFixed(2)}%) <RichText content="using consensus across Z-Score, MAD, Isolation Forest, and DBSCAN." /></p>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                          {Object.entries(layer1Data.outlier_analysis.summary.method_flags).map(([method, pct]: any) => (
-                              <div key={method} className="bg-neutral-50 p-4 rounded-xl border border-neutral-100 text-center shadow-inner">
-                                  <p className="text-xs font-bold text-neutral-400 uppercase">{method.replace('_', ' ')}</p>
-                                  <p className="text-xl font-black text-neutral-800">{Number(pct).toFixed(1)}%</p>
-                              </div>
-                          ))}
-                      </div>
-
-                      {layer1Data.outlier_analysis.row_results && Object.keys(layer1Data.outlier_analysis.row_results).length > 0 && (
-                          <div className="mt-8 space-y-3">
-                              <h5 className="font-bold text-sm uppercase tracking-wider text-neutral-500 mb-4 border-b pb-2">Top Extreme Anomalies</h5>
-                              {Object.entries(layer1Data.outlier_analysis.row_results).slice(0, 5).map(([rowIdx, result]: any) => {
-                                  const methods = [];
-                                  if (result.method_scores.z_score > 3.0) methods.push("Z-Score");
-                                  if (result.method_scores.mad_score > 3.5) methods.push("MAD");
-                                  if (result.method_scores.isolation_forest === 1) methods.push("Isolation Forest");
-                                  if (result.method_scores.dbscan === 1) methods.push("DBSCAN");
-                                  
-                                  return (
-                                      <div key={rowIdx} className="flex justify-between items-center p-4 bg-red-50 rounded-xl border border-red-100 transition hover:shadow-md">
-                                          <div className="font-bold text-red-900 bg-white px-3 py-1 rounded-lg border border-red-200 shadow-sm">Row #{rowIdx}</div>
-                                          <div className="text-right">
-                                              <p className="text-sm font-bold text-red-700">{methods.length}/4 methods flag this point as anomaly</p>
-                                              <p className="text-[10px] uppercase font-bold text-red-400 mt-1 tracking-wider">({methods.join(', ')})</p>
-                                          </div>
-                                      </div>
-                                  )
-                              })}
-                          </div>
-                      )}
-                   </div>
-                )}
-                
-                {layer1Data.feature_importance && (
-                   <div className="bg-white p-8 rounded-2xl border border-neutral-200 shadow-sm">
-                      <h4 className="text-2xl font-bold mb-6 flex items-center gap-2"><Sparkles className="text-amber-500"/> Causal Impact & Feature Ablation</h4>
-                      
-                      {layer1Data.feature_importance.insights && (
-                          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
-                              <p className="text-sm text-amber-900 mb-4 pb-2 border-b border-amber-200/50">
-                                  <RichText content="The metrics below measure feature importance via Permutation Impact and Feature Ablation." />
-                              </p>
-                              {layer1Data.feature_importance.insights.map((insight: string, idx: number) => (
-                                  <div key={idx} className="text-amber-800 font-medium flex gap-2 items-start">
-                                      <CheckCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5"/> 
-                                      <div><RichText content={insight} /></div>
-                                  </div>
-                              ))}
-                          </div>
-                      )}
-                      
-                      <div className="space-y-4">
-                          {Object.entries(layer1Data.feature_importance.features).sort((a: any, b: any) => b[1].importance_score - a[1].importance_score).map(([feat, metrics]: any) => {
-                              const chartData = metrics.pdp_x && metrics.pdp_y ? metrics.pdp_x.map((x: any, i: number) => ({ x: Number(x).toFixed(2), y: metrics.pdp_y[i] })) : [];
-                              return (
-                                <div key={feat} className="flex flex-col p-4 bg-neutral-50 rounded-lg border border-neutral-100 hover:shadow-sm transition gap-4">
-                                  <div className="flex justify-between items-center">
-                                      <span className="font-bold text-neutral-800">{feat}</span>
-                                      <div className="flex gap-6">
-                                          <div className="text-right">
-                                              <p className="text-[10px] uppercase font-bold text-neutral-400">Permutation Impact</p>
-                                              <p className="text-sm font-black text-blue-600">{(metrics.importance_score * 100).toFixed(2)}%</p>
-                                          </div>
-                                          <div className="text-right">
-                                              <p className="text-[10px] uppercase font-bold text-neutral-400">Ablation Drop</p>
-                                              <p className="text-sm font-black text-red-600">{(metrics.performance_impact * 100).toFixed(2)}%</p>
-                                          </div>
-                                      </div>
-                                  </div>
-                                  {chartData.length > 0 && (
-                                      <div className="h-40 mt-2 w-full bg-white p-3 rounded-lg border border-neutral-100 shadow-inner">
-                                          <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Partial Dependence (Marginal Effect)</p>
-                                          <ResponsiveContainer width="100%" height="100%">
-                                              <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                                                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                                  <XAxis dataKey="x" tick={{fontSize: 10}} minTickGap={20} />
-                                                  <YAxis domain={['auto', 'auto']} tick={{fontSize: 10}} width={40} />
-                                                  <Tooltip contentStyle={{borderRadius: '8px', fontSize: '12px'}} formatter={(val: any) => typeof val === 'number' ? val.toFixed(4) : val} />
-                                                  <Line type="monotone" dataKey="y" stroke="#d97706" strokeWidth={2} dot={false} activeDot={{r: 4}} />
-                                              </LineChart>
-                                          </ResponsiveContainer>
-                                      </div>
-                                  )}
-                                </div>
-                              );
-                          })}
-                      </div>
-                   </div>
-                )}
-          </div>
-        )}
 
                 {explorerTab === 'plots' && edaData && (
                     <div className="animate-in fade-in">
@@ -1020,6 +913,114 @@ export default function ResultsPage() {
                    </div>
                 )}
                     </div>
+                )}
+          </div>
+        )}
+
+        {activeTab === 'layer1' && layer1Data && (
+          <div className="p-12 pt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="text-center mb-16">
+                   <Activity className="w-16 h-16 text-indigo-500 mx-auto mb-6" />
+                   <h3 className="text-3xl font-bold mb-4">Deep Machine Learning Analytics</h3>
+                   <p className="text-lg text-neutral-600 mb-2 leading-relaxed max-w-2xl mx-auto">
+                      <RichText content="Multi-method outlier detection and causal feature impact analysis powered by the Layer 1 Engine." />
+                   </p>
+                </div>
+                
+                {layer1Data.outlier_analysis && (
+                   <div className="mb-16 bg-white p-8 rounded-2xl border border-neutral-200 shadow-sm">
+                      <h4 className="text-2xl font-bold mb-6 flex items-center gap-2"><AlertTriangle className="text-red-500"/> Multi-Method Outlier Consensus</h4>
+                      <p className="mb-4 text-neutral-600 font-medium">Found <span className="font-bold">{layer1Data.outlier_analysis.summary.total_outliers} outliers</span> ({layer1Data.outlier_analysis.summary.percentage_flagged.toFixed(2)}%) <RichText content="using consensus across Z-Score, MAD, Isolation Forest, and DBSCAN." /></p>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                          {Object.entries(layer1Data.outlier_analysis.summary.method_flags).map(([method, pct]: any) => (
+                              <div key={method} className="bg-neutral-50 p-4 rounded-xl border border-neutral-100 text-center shadow-inner">
+                                  <p className="text-xs font-bold text-neutral-400 uppercase">{method.replace('_', ' ')}</p>
+                                  <p className="text-xl font-black text-neutral-800">{Number(pct).toFixed(1)}%</p>
+                              </div>
+                          ))}
+                      </div>
+
+                      {layer1Data.outlier_analysis.row_results && Object.keys(layer1Data.outlier_analysis.row_results).length > 0 && (
+                          <div className="mt-8 space-y-3">
+                              <h5 className="font-bold text-sm uppercase tracking-wider text-neutral-500 mb-4 border-b pb-2">Top Extreme Anomalies</h5>
+                              {Object.entries(layer1Data.outlier_analysis.row_results).slice(0, 5).map(([rowIdx, result]: any) => {
+                                  const methods = [];
+                                  if (result.method_scores.z_score > 3.0) methods.push("Z-Score");
+                                  if (result.method_scores.mad_score > 3.5) methods.push("MAD");
+                                  if (result.method_scores.isolation_forest === 1) methods.push("Isolation Forest");
+                                  if (result.method_scores.dbscan === 1) methods.push("DBSCAN");
+                                  
+                                  return (
+                                      <div key={rowIdx} className="flex justify-between items-center p-4 bg-red-50 rounded-xl border border-red-100 transition hover:shadow-md">
+                                          <div className="font-bold text-red-900 bg-white px-3 py-1 rounded-lg border border-red-200 shadow-sm">Row #{rowIdx}</div>
+                                          <div className="text-right">
+                                              <p className="text-sm font-bold text-red-700">{methods.length}/4 methods flag this point as anomaly</p>
+                                              <p className="text-[10px] uppercase font-bold text-red-400 mt-1 tracking-wider">({methods.join(', ')})</p>
+                                          </div>
+                                      </div>
+                                  )
+                              })}
+                          </div>
+                      )}
+                   </div>
+                )}
+                
+                {layer1Data.feature_importance && (
+                   <div className="bg-white p-8 rounded-2xl border border-neutral-200 shadow-sm">
+                      <h4 className="text-2xl font-bold mb-6 flex items-center gap-2"><Sparkles className="text-amber-500"/> Causal Impact & Feature Ablation</h4>
+                      
+                      {layer1Data.feature_importance.insights && (
+                          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                              <p className="text-sm text-amber-900 mb-4 pb-2 border-b border-amber-200/50">
+                                  <RichText content="The metrics below measure feature importance via Permutation Impact and Feature Ablation." />
+                              </p>
+                              {layer1Data.feature_importance.insights.map((insight: string, idx: number) => (
+                                  <div key={idx} className="text-amber-800 font-medium flex gap-2 items-start">
+                                      <CheckCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5"/> 
+                                      <div><RichText content={insight} /></div>
+                                  </div>
+                              ))}
+                          </div>
+                      )}
+                      
+                      <div className="space-y-4">
+                          {Object.entries(layer1Data.feature_importance.features).sort((a: any, b: any) => b[1].importance_score - a[1].importance_score).map(([feat, metrics]: any) => {
+                              const chartData = metrics.pdp_x && metrics.pdp_y ? metrics.pdp_x.map((x: any, i: number) => ({ x: Number(x).toFixed(2), y: metrics.pdp_y[i] })) : [];
+                              return (
+                                <div key={feat} className="flex flex-col p-4 bg-neutral-50 rounded-lg border border-neutral-100 hover:shadow-sm transition gap-4">
+                                  <div className="flex justify-between items-center">
+                                      <span className="font-bold text-neutral-800">{feat}</span>
+                                      <div className="flex gap-6">
+                                          <div className="text-right">
+                                              <p className="text-[10px] uppercase font-bold text-neutral-400">Permutation Impact</p>
+                                              <p className="text-sm font-black text-blue-600">{(metrics.importance_score * 100).toFixed(2)}%</p>
+                                          </div>
+                                          <div className="text-right">
+                                              <p className="text-[10px] uppercase font-bold text-neutral-400">Ablation Drop</p>
+                                              <p className="text-sm font-black text-red-600">{(metrics.performance_impact * 100).toFixed(2)}%</p>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  {chartData.length > 0 && (
+                                      <div className="h-40 mt-2 w-full bg-white p-3 rounded-lg border border-neutral-100 shadow-inner">
+                                          <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Partial Dependence (Marginal Effect)</p>
+                                          <ResponsiveContainer width="100%" height="100%">
+                                              <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                                  <XAxis dataKey="x" tick={{fontSize: 10}} minTickGap={20} />
+                                                  <YAxis domain={['auto', 'auto']} tick={{fontSize: 10}} width={40} />
+                                                  <Tooltip contentStyle={{borderRadius: '8px', fontSize: '12px'}} formatter={(val: any) => typeof val === 'number' ? val.toFixed(4) : val} />
+                                                  <Line type="monotone" dataKey="y" stroke="#d97706" strokeWidth={2} dot={false} activeDot={{r: 4}} />
+                                              </LineChart>
+                                          </ResponsiveContainer>
+                                      </div>
+                                  )}
+                                </div>
+                              );
+                          })}
+                      </div>
+                   </div>
                 )}
           </div>
         )}
