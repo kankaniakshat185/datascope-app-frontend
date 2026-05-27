@@ -1185,7 +1185,6 @@ if len(num_cols) > 0:
                         </div>
                         <p className="text-xs text-neutral-500 font-medium uppercase tracking-widest">Secure local processing • No data storage</p>
                     </div>
-                    </div>
                     {showCode && (
                         <div className="max-w-3xl mx-auto mb-10 animate-in fade-in slide-in-from-bottom-4">
                             <div className="bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl border border-neutral-800">
