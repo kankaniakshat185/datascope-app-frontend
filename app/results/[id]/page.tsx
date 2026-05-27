@@ -328,7 +328,7 @@ export default function ResultsPage() {
   const { data: session } = authClient.useSession();
   const [data, setData] = useState<DatasetResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'issues' | 'dictionary' | 'eda' | 'remediation' | 'drift' | 'layer1' | 'l3_intelligence'>('issues');
+  const [activeTab, setActiveTab] = useState<'issues' | 'eda' | 'remediation' | 'drift' | 'layer1' | 'l3_intelligence'>('issues');
   
   const searchParams = useSearchParams();
   const rcJob = searchParams.get('rcJob');
@@ -652,21 +652,12 @@ export default function ResultsPage() {
               </div>
             </button>
             <button 
-              onClick={() => setActiveTab('dictionary')}
-              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'dictionary' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
-            >
-              <div className="flex items-center gap-2">
-                <Database className="w-4 h-4" />
-                Data Dictionary
-              </div>
-            </button>
-            <button 
               onClick={() => setActiveTab('eda')}
               className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'eda' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
             >
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                EDA Dashboard
+                <Database className="w-4 h-4" />
+                Data Explorer
               </div>
             </button>
             <button 
@@ -690,7 +681,7 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {activeTab === 'dictionary' && dataDictResult && dataDictResult.rawJson && (
+        {activeTab === 'eda' && dataDictResult && dataDictResult.rawJson && (
           <div className="p-12 pt-0 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 transition">
                 <div className="text-center mb-10">
                     <Database className="w-16 h-16 text-blue-500 mx-auto mb-6" />
