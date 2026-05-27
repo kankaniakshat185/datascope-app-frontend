@@ -15,7 +15,8 @@ import {
   Clock,
   LayoutGrid,
   Filter,
-  Trash2
+  Trash2,
+  Key
 } from "lucide-react";
 
 export default function VaultPage() {
@@ -23,7 +24,22 @@ export default function VaultPage() {
   const [datasets, setDatasets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [generatingKey, setGeneratingKey] = useState(false);
   const router = useRouter();
+
+  const handleGenerateKey = async () => {
+    setGeneratingKey(true);
+    try {
+      const res = await fetch("/api/keys", { method: "POST" });
+      const data = await res.json();
+      if (data.key) {
+        alert("Your new DataScope SDK Key (save this now!):\n\n" + data.key.key);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setGeneratingKey(false);
+  };
 
   const fetchDatasets = () => {
     fetch("/api/vault")
@@ -114,15 +130,25 @@ export default function VaultPage() {
             <p className="text-neutral-500 text-lg font-medium">Access and audit your historical dataset analysis reports.</p>
           </div>
           
-          <div className="relative w-full md:w-96 group">
-             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 group-focus-within:text-blue-500 transition-colors" />
-             <input 
-               type="text" 
-               placeholder="Search dataset history..."
-               className="w-full bg-white border border-neutral-200 rounded-xl py-4 pl-12 pr-4 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold text-sm shadow-sm"
-               value={searchTerm}
-               onChange={e => setSearchTerm(e.target.value)}
-             />
+          <div className="flex flex-col md:flex-row items-end gap-4">
+             <button 
+                onClick={handleGenerateKey} 
+                disabled={generatingKey}
+                className="h-full py-4 px-6 bg-neutral-900 text-white rounded-xl font-bold text-sm hover:bg-neutral-800 transition-all shadow-lg flex items-center gap-2 whitespace-nowrap"
+             >
+                <Key className="w-4 h-4" />
+                {generatingKey ? "Generating..." : "Generate SDK Key"}
+             </button>
+             <div className="relative w-full md:w-96 group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 group-focus-within:text-blue-500 transition-colors" />
+                <input 
+                  type="text" 
+                  placeholder="Search dataset history..."
+                  className="w-full bg-white border border-neutral-200 rounded-xl py-4 pl-12 pr-4 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold text-sm shadow-sm"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+             </div>
           </div>
         </div>
 

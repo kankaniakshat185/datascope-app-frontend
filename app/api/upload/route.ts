@@ -4,12 +4,28 @@ import { prisma } from "../../../lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
+    let userId = null;
     const session = await auth.api.getSession({
       headers: req.headers,
     });
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (session?.user) {
+      userId = session.user.id;
+    } else {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.split(" ")[1];
+        const apiKeyRecord = await prisma.apiKey.findUnique({
+          where: { key: token }
+        });
+        if (apiKeyRecord) {
+          userId = apiKeyRecord.userId;
+        }
+      }
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized: Invalid session or API key" }, { status: 401 });
     }
 
     const formData = await req.formData();
@@ -37,7 +53,7 @@ export async function POST(req: NextRequest) {
     // Create dataset entry
     const dataset = await prisma.dataset.create({
       data: {
-        userId: session.user.id,
+        userId: userId,
         filePath: "in-memory",
         fileName: file.name,
       },
