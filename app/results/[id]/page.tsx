@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, ReactNode, useRef } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
 import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles, GitBranch, LogOut, FileDown } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label, ScatterChart, Scatter, ZAxis, Cell, LineChart, Line } from "recharts";
@@ -328,53 +328,8 @@ export default function ResultsPage() {
   const { data: session } = authClient.useSession();
   const [data, setData] = useState<DatasetResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'issues' | 'eda' | 'remediation' | 'drift' | 'layer1' | 'l3_intelligence'>('issues');
+  const [activeTab, setActiveTab] = useState<'issues' | 'eda' | 'remediation' | 'drift' | 'layer1'>('issues');
   const [explorerTab, setExplorerTab] = useState<'dictionary' | 'plots'>('dictionary');
-  
-  const searchParams = useSearchParams();
-  const rcJob = searchParams.get('rcJob');
-  const benchJob = searchParams.get('benchJob');
-  
-  const [rcData, setRcData] = useState<any>(null);
-  const [benchData, setBenchData] = useState<any>(null);
-  const [rcStatus, setRcStatus] = useState<string>(rcJob ? 'queued' : 'completed');
-  const [benchStatus, setBenchStatus] = useState<string>(benchJob ? 'queued' : 'completed');
-
-  useEffect(() => {
-    let rcInterval: any;
-    let benchInterval: any;
-    
-    if (rcJob && (rcStatus === 'queued' || rcStatus === 'processing')) {
-        rcInterval = setInterval(() => {
-            fetch(process.env.NEXT_PUBLIC_ML_SERVICE_URL ? `${process.env.NEXT_PUBLIC_ML_SERVICE_URL}/api/v3/job/${rcJob}` : `http://localhost:8000/api/v3/job/${rcJob}`)
-            .then(res => res.json())
-            .then(data => {
-                setRcStatus(data.status);
-                if (data.status === 'completed') {
-                    setRcData(data.result);
-                }
-            }).catch(e => console.error(e));
-        }, 2000);
-    }
-    
-    if (benchJob && (benchStatus === 'queued' || benchStatus === 'processing')) {
-        benchInterval = setInterval(() => {
-            fetch(process.env.NEXT_PUBLIC_ML_SERVICE_URL ? `${process.env.NEXT_PUBLIC_ML_SERVICE_URL}/api/v3/job/${benchJob}` : `http://localhost:8000/api/v3/job/${benchJob}`)
-            .then(res => res.json())
-            .then(data => {
-                setBenchStatus(data.status);
-                if (data.status === 'completed') {
-                    setBenchData(data.result);
-                }
-            }).catch(e => console.error(e));
-        }, 2000);
-    }
-    
-    return () => {
-        if (rcInterval) clearInterval(rcInterval);
-        if (benchInterval) clearInterval(benchInterval);
-    };
-  }, [rcJob, benchJob, rcStatus, benchStatus]);
   const [edaView, setEdaView] = useState<'numerical' | 'categorical' | 'outlier' | 'correlation'>('numerical');
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
   const [issueFilter, setIssueFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
@@ -643,15 +598,7 @@ export default function ResultsPage() {
                 Deep Analytics
               </div>
             </button>
-            <button 
-              onClick={() => setActiveTab('l3_intelligence')}
-              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'l3_intelligence' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
-            >
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-500" />
-                L3 Intelligence
-              </div>
-            </button>
+
             <button 
               onClick={() => setActiveTab('eda')}
               className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'eda' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
@@ -1450,105 +1397,7 @@ export default function ResultsPage() {
         )}
       </main>
 
-      {activeTab === 'l3_intelligence' && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 p-12 pt-0 max-w-7xl mx-auto">
-            <div className="text-center mb-10">
-                <Sparkles className="w-16 h-16 text-indigo-500 mx-auto mb-6" />
-                <h3 className="text-3xl font-bold mb-4 text-neutral-900">Layer 3: Production ML Intelligence</h3>
-                <p className="text-lg text-neutral-600 w-full max-w-2xl mx-auto leading-relaxed">
-                    Advanced root cause diagnostics, failure mode analysis, and model benchmarking based on your latest dataset upload.
-                </p>
-            </div>
 
-            {/* Status indicators */}
-            {(rcStatus !== 'completed' || benchStatus !== 'completed') && (
-                <div className="flex flex-col items-center justify-center p-12 bg-neutral-50 rounded-2xl border border-neutral-200 shadow-inner gap-4">
-                    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="font-bold text-neutral-600">Running Asynchronous ML Jobs...</p>
-                    <div className="flex gap-8 text-sm">
-                        <span className={rcStatus === 'completed' ? 'text-emerald-600 font-black' : 'text-neutral-400'}>Root Cause Engine: {rcStatus}</span>
-                        <span className={benchStatus === 'completed' ? 'text-emerald-600 font-black' : 'text-neutral-400'}>Benchmark Engine: {benchStatus}</span>
-                    </div>
-                </div>
-            )}
-
-            {/* Root Cause & Failure Modes */}
-            {rcStatus === 'completed' && rcData && rcData.failure_analysis?.failure_profiles && (
-                <div className="space-y-8">
-                    <h4 className="text-2xl font-black text-neutral-800 border-b-2 border-neutral-100 pb-2">Why is the model failing?</h4>
-                    <div className="grid grid-cols-1 gap-6">
-                        {rcData.failure_analysis.failure_profiles.map((profile: any, idx: number) => (
-                            <div key={idx} className="p-8 rounded-2xl border border-red-200 bg-red-50 shadow-sm relative overflow-hidden group hover:shadow-md transition">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                    <AlertTriangle className="w-24 h-24" />
-                                </div>
-                                <div className="relative z-10">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <span className="px-3 py-1 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-md shadow">Failure Mode {idx + 1}</span>
-                                        <span className="text-sm font-bold text-red-800/60">{profile.affected_rows} rows affected • {profile.severity.toUpperCase()} SEVERITY</span>
-                                    </div>
-                                    <p className="text-xl font-bold text-red-900 mb-6 leading-tight">
-                                        {profile.failure_pattern}
-                                    </p>
-                                    <div className="space-y-3">
-                                        <p className="text-[10px] font-black uppercase text-red-800/50 tracking-widest">Deterministic Fix Recommendations</p>
-                                        <ul className="space-y-2">
-                                            {profile.recommendations?.map((rec: string, i: number) => (
-                                                <li key={i} className="flex gap-2 text-sm font-bold text-red-800">
-                                                    <span className="text-red-500">•</span> {rec}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Benchmark Leaderboard */}
-            {benchStatus === 'completed' && benchData && benchData.leaderboard && (
-                <div className="space-y-8 mt-16">
-                    <h4 className="text-2xl font-black text-neutral-800 border-b-2 border-neutral-100 pb-2">Model Benchmark Leaderboard</h4>
-                    <div className="bg-white rounded-2xl border border-neutral-200 shadow-xl overflow-hidden">
-                        <table className="w-full text-left">
-                            <thead className="bg-neutral-900 text-white text-[10px] font-black uppercase tracking-widest">
-                                <tr>
-                                    <th className="p-6">Model Architecture</th>
-                                    <th className="p-6">Accuracy / R²</th>
-                                    <th className="p-6">Robustness Score</th>
-                                    <th className="p-6">Latency (ms/sample)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {benchData.leaderboard.map((model: any, idx: number) => (
-                                    <tr key={idx} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50 transition-colors">
-                                        <td className="p-6 font-bold text-neutral-900 flex items-center gap-3">
-                                            {idx === 0 && <span className="bg-yellow-400 text-black px-2 py-0.5 rounded text-[10px] font-black shadow">#1</span>}
-                                            {model.model}
-                                        </td>
-                                        <td className="p-6 font-mono text-neutral-700">
-                                            {model.metrics.r2 ? model.metrics.r2.toFixed(3) : model.metrics.accuracy?.toFixed(3)}
-                                        </td>
-                                        <td className="p-6">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-24 h-2 bg-neutral-200 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-indigo-500" style={{ width: `${Math.max(5, model.robustness_score * 100)}%` }}></div>
-                                                </div>
-                                                <span className="font-mono text-sm text-neutral-600">{model.robustness_score.toFixed(2)}</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-6 font-mono text-neutral-700">{model.latency.inference_ms_per_sample.toFixed(4)} ms</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
-          </div>
-      )}
 
       <footer className="p-4 flex justify-end">
          <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] opacity-80 hover:opacity-100 transition-opacity">
