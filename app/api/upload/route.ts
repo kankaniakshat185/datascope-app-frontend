@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
     } else {
       const authHeader = req.headers.get("authorization");
       if (authHeader && authHeader.startsWith("Bearer ")) {
-        const token = authHeader.split(" ")[1];
+        const token = authHeader.split(" ")[1].trim();
+        console.log("Checking API Key:", token);
         const apiKeyRecord = await prisma.apiKey.findUnique({
           where: { key: token }
         });
