@@ -134,7 +134,12 @@ export default function Home() {
       const data = await res.json();
       router.push(`/results/${data.datasetId}`);
     } else {
-      alert("Upload failed");
+      try {
+        const errorData = await res.json();
+        alert(`Upload failed: ${errorData.error || "Unknown error"}`);
+      } catch (e) {
+        alert("Upload failed: Unknown error");
+      }
     }
   };
 
@@ -202,6 +207,10 @@ export default function Home() {
           >
             {uploading ? "Analyzing..." : "Analyze"}
           </button>
+        </div>
+
+        <div className="flex flex-col items-center gap-6 mt-6 max-w-xl mx-auto">
+            <p className="text-xs text-neutral-500 font-medium uppercase tracking-widest text-center">Secure local processing • Your dataset is not stored anywhere</p>
         </div>
 
         <div className="flex flex-col mt-4">

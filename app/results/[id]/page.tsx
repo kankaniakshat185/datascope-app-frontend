@@ -4,7 +4,7 @@ import { useEffect, useState, ReactNode, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
 import { ArrowLeft, AlertCircle, AlertTriangle, CheckCircle, Activity, Database, BarChart3, Sparkles, GitBranch, LogOut, FileDown } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label, ScatterChart, Scatter, ZAxis, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Label, ScatterChart, Scatter, ZAxis, Cell, LineChart, Line } from "recharts";
 
 type Issue = {
   id: string;
@@ -767,21 +767,40 @@ export default function ResultsPage() {
                       )}
                       
                       <div className="space-y-4">
-                          {Object.entries(layer1Data.feature_importance.features).sort((a: any, b: any) => b[1].importance_score - a[1].importance_score).map(([feat, metrics]: any) => (
-                              <div key={feat} className="flex justify-between items-center p-4 bg-neutral-50 rounded-lg border border-neutral-100 hover:shadow-sm transition">
-                                  <span className="font-bold text-neutral-800">{feat}</span>
-                                  <div className="flex gap-6">
-                                      <div className="text-right">
-                                          <p className="text-[10px] uppercase font-bold text-neutral-400">Permutation Impact</p>
-                                          <p className="text-sm font-black text-blue-600">{(metrics.importance_score * 100).toFixed(2)}%</p>
-                                      </div>
-                                      <div className="text-right">
-                                          <p className="text-[10px] uppercase font-bold text-neutral-400">Ablation Drop</p>
-                                          <p className="text-sm font-black text-red-600">{(metrics.performance_impact * 100).toFixed(2)}%</p>
+                          {Object.entries(layer1Data.feature_importance.features).sort((a: any, b: any) => b[1].importance_score - a[1].importance_score).map(([feat, metrics]: any) => {
+                              const chartData = metrics.pdp_x && metrics.pdp_y ? metrics.pdp_x.map((x: any, i: number) => ({ x: Number(x).toFixed(2), y: metrics.pdp_y[i] })) : [];
+                              return (
+                                <div key={feat} className="flex flex-col p-4 bg-neutral-50 rounded-lg border border-neutral-100 hover:shadow-sm transition gap-4">
+                                  <div className="flex justify-between items-center">
+                                      <span className="font-bold text-neutral-800">{feat}</span>
+                                      <div className="flex gap-6">
+                                          <div className="text-right">
+                                              <p className="text-[10px] uppercase font-bold text-neutral-400">Permutation Impact</p>
+                                              <p className="text-sm font-black text-blue-600">{(metrics.importance_score * 100).toFixed(2)}%</p>
+                                          </div>
+                                          <div className="text-right">
+                                              <p className="text-[10px] uppercase font-bold text-neutral-400">Ablation Drop</p>
+                                              <p className="text-sm font-black text-red-600">{(metrics.performance_impact * 100).toFixed(2)}%</p>
+                                          </div>
                                       </div>
                                   </div>
-                              </div>
-                          ))}
+                                  {chartData.length > 0 && (
+                                      <div className="h-40 mt-2 w-full bg-white p-3 rounded-lg border border-neutral-100 shadow-inner">
+                                          <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Partial Dependence (Marginal Effect)</p>
+                                          <ResponsiveContainer width="100%" height="100%">
+                                              <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                                                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                                  <XAxis dataKey="x" tick={{fontSize: 10}} minTickGap={20} />
+                                                  <YAxis domain={['auto', 'auto']} tick={{fontSize: 10}} width={40} />
+                                                  <Tooltip contentStyle={{borderRadius: '8px', fontSize: '12px'}} formatter={(val: any) => typeof val === 'number' ? val.toFixed(4) : val} />
+                                                  <Line type="monotone" dataKey="y" stroke="#d97706" strokeWidth={2} dot={false} activeDot={{r: 4}} />
+                                              </LineChart>
+                                          </ResponsiveContainer>
+                                      </div>
+                                  )}
+                                </div>
+                              );
+                          })}
                       </div>
                    </div>
                 )}
