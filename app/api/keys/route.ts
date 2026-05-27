@@ -34,6 +34,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check if the user already has an API key
+    const existingKey = await prisma.apiKey.findFirst({
+      where: { userId: session.user.id }
+    });
+
+    if (existingKey) {
+      return NextResponse.json({ key: existingKey });
+    }
+
     // Generate a secure random API key
     const rawKey = crypto.randomBytes(32).toString("hex");
     const formattedKey = `ds_${rawKey}`;
