@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       data: {
         datasetVersionId: datasetVersion.id,
         userId: userId,
-        status: "QUEUED",
+        status: "AWAITING_REVIEW",
         validationStatus: "QUEUED"
       }
     });
