@@ -106,14 +106,30 @@ export async function GET(
         });
       }
 
+      const governance = jobData.result.governance || { recommended_status: "AWAITING_REVIEW", audit_logs: [] };
+
       // Transition State Machine
       await prisma.modelRun.update({
         where: { id: runId },
         data: {
-          status: "AWAITING_REVIEW",
+          status: governance.recommended_status,
           validationStatus: "PASSED"
         }
       });
+
+      // Save Audit Logs
+      if (governance.audit_logs && Array.isArray(governance.audit_logs)) {
+        for (const log of governance.audit_logs) {
+          await prisma.auditLog.create({
+            data: {
+              runId: runId,
+              actorId: "System",
+              eventType: log.rule,
+              comments: `[${log.severity}] ${log.message}`
+            }
+          });
+        }
+      }
 
       return NextResponse.json({ status: "COMPLETED", datasetId, progress: 100, stage: "Analysis complete." });
     }
