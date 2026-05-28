@@ -566,7 +566,7 @@ if len(num_cols) > 0:
   const layer1Result = data.analysisResults.find((i: Issue) => i.issueType === "LAYER1_ENGINE");
   const layer1Data = layer1Result?.rawJson as any;
   const actualIssues = data.analysisResults.filter((i: Issue) => !["DATA_DICTIONARY", "EDA_DATA", "SHAP_DATA", "SEGMENTED_SHAP_DATA", "LAYER1_ENGINE"].includes(i.issueType));
-  const run = data.versions?.[0]?.ModelRuns?.[0] || {};
+  const run = (data.versions?.[0]?.ModelRuns?.[0] || {}) as any;
   const severityIcon: Record<string, any> = {
     CRITICAL: <AlertCircle className="w-6 h-6 text-red-700" />,
     HIGH: <AlertCircle className="w-6 h-6 text-red-500" />,
