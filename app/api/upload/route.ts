@@ -43,14 +43,12 @@ export async function POST(req: NextRequest) {
 
     const buffer = await file.arrayBuffer();
 
-    let targetColumn = null;
-    if (file.name.endsWith(".csv")) {
-        const text = new TextDecoder().decode(buffer.slice(0, 1024));
-        const firstLine = text.split('\n')[0];
-        if (firstLine) {
-            const headers = firstLine.split(',');
-            targetColumn = headers[headers.length - 1].trim();
-        }
+    const targetColumn = formData.get("target_column") as string | null;
+    const predictionType = formData.get("prediction_type") as string | null;
+    const excludedColumns = formData.get("excluded_columns") as string | null;
+
+    if (!targetColumn) {
+      return NextResponse.json({ error: "Target column is strictly required for governance." }, { status: 400 });
     }
 
     // Phase 1 Governance: Create Dataset, Version, and ModelRun
@@ -88,6 +86,12 @@ export async function POST(req: NextRequest) {
     }
     if (targetColumn) {
         mlFormData.append("target_column", targetColumn);
+    }
+    if (predictionType) {
+        mlFormData.append("prediction_type", predictionType);
+    }
+    if (excludedColumns) {
+        mlFormData.append("excluded_columns", excludedColumns);
     }
 
     // Phase 2 Async Orchestration: Instantly start background job
