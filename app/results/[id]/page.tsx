@@ -547,7 +547,7 @@ if len(num_cols) > 0:
   const layer1Data = layer1Result?.rawJson as any;
   const actualIssues = data.analysisResults.filter((i: Issue) => !["DATA_DICTIONARY", "EDA_DATA", "SHAP_DATA", "SEGMENTED_SHAP_DATA", "LAYER1_ENGINE"].includes(i.issueType));
 
-  const severityIcon: Record<string, JSX.Element> = {
+  const severityIcon: Record<string, any> = {
     CRITICAL: <AlertCircle className="w-6 h-6 text-red-700" />,
     HIGH: <AlertCircle className="w-6 h-6 text-red-500" />,
     MEDIUM: <AlertTriangle className="w-6 h-6 text-yellow-500" />,
