@@ -39,9 +39,10 @@ export async function GET(
       const datasetId = modelRun.DatasetVersion.datasetId;
 
       const { issues, dictData, edaData, shapData, layer1Data } = jobData.result;
+      const issuesArray = Array.isArray(issues) ? issues : (issues.issues || []);
 
       // Filter out raw outliers from generic ML checks to avoid duplicate display
-      const filteredIssues = issues.filter((i: any) => i.type !== "OUTLIERS" && i.type !== "OUTLIER_CAPPING");
+      const filteredIssues = issuesArray.filter((i: any) => i.type !== "OUTLIERS" && i.type !== "OUTLIER_CAPPING");
 
       for (const issue of filteredIssues) {
         const numericImpact = typeof issue.impact === "number" ? issue.impact : parseFloat(issue.impact || 0);
