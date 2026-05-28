@@ -38,7 +38,7 @@ export async function GET(
       if (!modelRun) throw new Error("ModelRun not found");
       
       // Prevent subsequent polling intervals from duplicating data
-      if (modelRun.status !== "PROCESSING") {
+      if (modelRun.validationStatus !== "QUEUED") {
         return NextResponse.json({ status: "COMPLETED", datasetId: modelRun.DatasetVersion.datasetId, progress: 100, stage: "Analysis complete." });
       }
 
