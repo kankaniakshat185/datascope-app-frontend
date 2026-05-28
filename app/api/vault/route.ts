@@ -39,3 +39,31 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await auth.api.getSession({
+      headers: req.headers,
+    });
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Delete all datasets for the user; assuming cascade delete is set up in Prisma
+    await prisma.dataset.deleteMany({
+      where: {
+        userId: session.user.id,
+      },
+    });
+
+    return NextResponse.json({ message: "Vault cleared successfully" });
+
+  } catch (error: any) {
+    console.error("Vault clear error:", error);
+    return NextResponse.json(
+      { error: "Failed to clear vault" },
+      { status: 500 }
+    );
+  }
+}

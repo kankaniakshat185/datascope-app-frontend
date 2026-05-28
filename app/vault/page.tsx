@@ -37,8 +37,22 @@ export default function VaultPage() {
       }
     } catch (err) {
       console.error(err);
-    }
     setGeneratingKey(false);
+  };
+
+  const handleClearVault = async () => {
+    if (!confirm("Are you sure you want to permanently delete ALL history from the vault? This cannot be undone.")) return;
+    
+    try {
+      const res = await fetch("/api/vault", { method: "DELETE" });
+      if (res.ok) {
+        setDatasets([]);
+      } else {
+        alert("Failed to clear vault");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchDatasets = () => {
@@ -138,6 +152,13 @@ export default function VaultPage() {
              >
                 <Key className="w-4 h-4" />
                 {generatingKey ? "Generating..." : "Generate SDK Key"}
+             </button>
+             <button 
+                onClick={handleClearVault} 
+                className="h-full py-4 px-6 bg-red-100 text-red-700 rounded-xl font-bold text-sm hover:bg-red-200 transition-all shadow-sm border border-red-200 flex items-center gap-2 whitespace-nowrap"
+             >
+                <Trash2 className="w-4 h-4" />
+                Clear Vault
              </button>
              <div className="relative w-full md:w-96 group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 group-focus-within:text-blue-500 transition-colors" />
