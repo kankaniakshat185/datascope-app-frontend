@@ -45,6 +45,9 @@ export async function GET(
       await prisma.analysisResult.deleteMany({
         where: { datasetId }
       });
+      await prisma.auditLog.deleteMany({
+        where: { runId }
+      });
 
       // Filter out raw outliers from generic ML checks to avoid duplicate display
       const filteredIssues = issuesArray.filter((i: any) => i.type !== "OUTLIERS" && i.type !== "OUTLIER_CAPPING");
