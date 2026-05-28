@@ -651,7 +651,16 @@ if len(num_cols) > 0:
         </div>
 
         <div className="flex justify-center mb-10">
-          <div className="bg-neutral-200/50 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-neutral-200">
+          <div className="bg-neutral-200/50 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-neutral-200 overflow-x-auto">
+            <button 
+              onClick={() => setActiveTab('governance')}
+              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 whitespace-nowrap ${activeTab === 'governance' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
+            >
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                Governance & Audits
+              </div>
+            </button>
             <button 
               onClick={() => setActiveTab('issues')}
               className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'issues' ? 'bg-white text-black shadow-md' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}
