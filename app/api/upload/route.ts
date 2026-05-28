@@ -9,7 +9,7 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const authHeaders = headers();
+    const authHeaders = await headers();
     const authHeader = authHeaders.get("Authorization");
     
     let userId = null;
