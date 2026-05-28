@@ -37,6 +37,7 @@ export default function VaultPage() {
       }
     } catch (err) {
       console.error(err);
+    }
     setGeneratingKey(false);
   };
 
