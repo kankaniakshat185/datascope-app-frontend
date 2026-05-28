@@ -41,6 +41,11 @@ export async function GET(
       const { issues, dictData, edaData, shapData, layer1Data } = jobData.result;
       const issuesArray = Array.isArray(issues) ? issues : (issues.issues || []);
 
+      // Prevent duplicate insertions due to React strict mode or rapid polling
+      await prisma.analysisResult.deleteMany({
+        where: { datasetId }
+      });
+
       // Filter out raw outliers from generic ML checks to avoid duplicate display
       const filteredIssues = issuesArray.filter((i: any) => i.type !== "OUTLIERS" && i.type !== "OUTLIER_CAPPING");
 

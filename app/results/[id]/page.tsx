@@ -1612,6 +1612,22 @@ if len(num_cols) > 0:
                               Confidence: {issue.rawJson.confidence_score.toFixed(1)}%
                           </div>
                       )}
+                      
+                      {issue.rawJson?.governance_verdict && (
+                          <div className={`mt-3 text-left p-3 rounded-lg border text-xs font-medium ${
+                              issue.rawJson.governance_verdict === 'ACCEPTED' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+                              issue.rawJson.governance_verdict === 'REJECTED' ? 'bg-red-50 border-red-200 text-red-800' :
+                              'bg-amber-50 border-amber-200 text-amber-800'
+                          }`}>
+                              <p className="font-bold uppercase tracking-wider text-[10px] mb-1 opacity-80 flex items-center gap-1">
+                                  {issue.rawJson.governance_verdict === 'ACCEPTED' ? <CheckCircle className="w-3 h-3"/> :
+                                   issue.rawJson.governance_verdict === 'REJECTED' ? <AlertCircle className="w-3 h-3"/> :
+                                   <AlertTriangle className="w-3 h-3"/>}
+                                  Governance {issue.rawJson.governance_verdict}
+                              </p>
+                              {issue.rawJson.governance_explanation}
+                          </div>
+                      )}
                   </div>
                   {issue.rawJson?.metric && issue.rawJson?.baseline_score !== undefined && issue.rawJson?.after_score !== undefined && (
                       <MetricChart baseline={issue.rawJson.baseline_score} after={issue.rawJson.after_score} metric={issue.rawJson.metric} />
