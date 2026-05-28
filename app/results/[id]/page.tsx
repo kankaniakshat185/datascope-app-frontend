@@ -547,13 +547,15 @@ if len(num_cols) > 0:
   const layer1Data = layer1Result?.rawJson as any;
   const actualIssues = data.analysisResults.filter((i: Issue) => !["DATA_DICTIONARY", "EDA_DATA", "SHAP_DATA", "SEGMENTED_SHAP_DATA", "LAYER1_ENGINE"].includes(i.issueType));
 
-  const severityIcon = {
+  const severityIcon: Record<string, JSX.Element> = {
+    CRITICAL: <AlertCircle className="w-6 h-6 text-red-700" />,
     HIGH: <AlertCircle className="w-6 h-6 text-red-500" />,
     MEDIUM: <AlertTriangle className="w-6 h-6 text-yellow-500" />,
     LOW: <CheckCircle className="w-6 h-6 text-blue-500" />,
   };
 
-  const severityBg = {
+  const severityBg: Record<string, string> = {
+    CRITICAL: "bg-red-900/10 border-red-700/30",
     HIGH: "bg-red-500/10 border-red-500/20",
     MEDIUM: "bg-yellow-500/10 border-yellow-500/20",
     LOW: "bg-green-500/10 border-green-500/20",
@@ -1575,8 +1577,8 @@ if len(num_cols) > 0:
                 {actualIssues
                   .filter(issue => issueFilter === 'ALL' || issue.severity === issueFilter)
                   .sort((a, b) => {
-                      const order: Record<string, number> = { 'HIGH': 0, 'MEDIUM': 1, 'LOW': 2 };
-                      return order[a.severity] - order[b.severity];
+                      const order: Record<string, number> = { 'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3 };
+                      return (order[a.severity] ?? 4) - (order[b.severity] ?? 4);
                   })
                   .map((issue) => (
                     <div key={issue.id} className={`p-8 rounded-xl border ${severityBg[issue.severity]} backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition hover:translate-x-1 hover:shadow-lg`}>
@@ -1588,7 +1590,11 @@ if len(num_cols) > 0:
                   </div>
                   <div>
                       <div className="flex items-center gap-2 mb-2">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${issue.severity === 'HIGH' ? 'bg-red-500/20 text-red-700' : issue.severity === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-700' : 'bg-blue-500/20 text-blue-700'}`}>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              issue.severity === 'CRITICAL' ? 'bg-red-900/20 text-red-900' :
+                              issue.severity === 'HIGH' ? 'bg-red-500/20 text-red-700' : 
+                              issue.severity === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-700' : 
+                              'bg-blue-500/20 text-blue-700'}`}>
                               {issue.severity} PRIORITY
                           </span>
                       </div>
