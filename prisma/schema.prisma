@@ -19,6 +19,7 @@ model User {
   accounts      Account[]
   datasets      Dataset[]
   apiKeys       ApiKey[]
+  modelRuns     ModelRun[]
 
   @@unique([email])
   @@map("user")
@@ -78,8 +79,72 @@ model Dataset {
   dataDictionary  Json?
   uploadedAt      DateTime         @default(now())
   analysisResults AnalysisResult[]
+  versions        DatasetVersion[]
 
   @@map("dataset")
+}
+
+enum RunStatus {
+  AWAITING_REVIEW
+  APPROVED
+  REJECTED
+  MONITORING
+  RETRAINING_RECOMMENDED
+  ARCHIVED
+}
+
+enum JobStatus {
+  QUEUED
+  PROCESSING
+  PASSED
+  FAILED
+}
+
+model DatasetVersion {
+  id           String      @id @default(uuid())
+  datasetId    String      
+  dataset      Dataset     @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  version      Int         @default(1)
+  rowCount     Int?
+  schemaHash   String?     // Tracks if columns changed
+  createdAt    DateTime    @default(now())
+  
+  ModelRuns    ModelRun[]
+
+  @@map("dataset_version")
+}
+
+model ModelRun {
+  id                  String         @id @default(uuid())
+  datasetVersionId    String
+  DatasetVersion      DatasetVersion @relation(fields: [datasetVersionId], references: [id], onDelete: Cascade)
+  userId              String         
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  status              RunStatus      @default(AWAITING_REVIEW)
+  validationStatus    JobStatus      @default(QUEUED)
+  
+  benchmarkScore      Float?         
+  driftSeverity       String?        // LOW, MEDIUM, HIGH
+  
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  
+  AuditLogs           AuditLog[]
+
+  @@map("model_run")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  runId       String
+  ModelRun    ModelRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  actorId     String   // User ID or 'System'
+  eventType   String   // e.g., 'APPROVAL_GRANTED', 'DRIFT_DETECTED'
+  comments    String?
+  timestamp   DateTime @default(now())
+
+  @@map("audit_log")
 }
 
 model AnalysisResult {
