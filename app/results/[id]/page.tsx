@@ -315,8 +315,28 @@ const GlossaryTerm = ({ term, url, tooltip, children }: { term: string, url: str
 };
 
 const RichText = ({ content }: { content: string }) => {
-    let parts: any[] = [content];
+    // Basic Markdown Parser for **bold** and \n
+    let parts: any[] = [];
+    if (!content) return null;
+    
+    // First, split by newlines
+    const lines = content.split('\n');
+    lines.forEach((line, lineIdx) => {
+        // Then, parse bold tags
+        const boldParts = line.split(/(\*\*.*?\*\*)/g);
+        boldParts.forEach((part, partIdx) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+                parts.push(<strong key={`bold-${lineIdx}-${partIdx}`}>{part.slice(2, -2)}</strong>);
+            } else {
+                parts.push(part);
+            }
+        });
+        if (lineIdx < lines.length - 1) {
+            parts.push(<br key={`br-${lineIdx}`} />);
+        }
+    });
 
+    // Then apply glossary tooltips to strings
     GLOSSARY.forEach((item, index) => {
         parts = parts.flatMap((part: any, i: number) => {
             if (typeof part !== 'string') return [part];
@@ -337,7 +357,7 @@ const RichText = ({ content }: { content: string }) => {
         });
     });
 
-    return <>{parts.map((part, i) => <span key={i}>{part}</span>)}</>;
+    return <>{parts.map((part, i) => typeof part === 'string' ? <span key={i}>{part}</span> : part)}</>;
 };
 
 export default function ResultsPage() {
@@ -587,12 +607,14 @@ if len(num_cols) > 0:
                           <div className="flex justify-between items-start mb-4">
                               <h3 className="text-lg font-bold">{issue.issueType.replace(/_/g, ' ')}</h3>
                               <span className={`px-2 py-1 text-[10px] font-black rounded border ${
+                                  issue.severity === 'CRITICAL' ? 'bg-red-900 text-white border-red-900' :
                                   issue.severity === 'HIGH' ? 'bg-red-50 text-red-600 border-red-100' :
                                   issue.severity === 'MEDIUM' ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
-                                  'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                  issue.severity === 'LOW' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                  'bg-blue-50 text-blue-600 border-blue-100'
                               }`}>{issue.severity}</span>
                           </div>
-                          <p className="text-sm text-neutral-600 mb-4 font-medium leading-relaxed">{issue.description}</p>
+                          <div className="text-sm text-neutral-600 mb-4 font-medium leading-relaxed whitespace-pre-wrap"><RichText content={issue.description} /></div>
                           <div className="p-3 bg-white border border-neutral-100 rounded-lg">
                               <p className="text-[10px] font-black uppercase text-neutral-400 mb-1">Recommended Remediation</p>
                               <p className="text-xs font-bold text-neutral-800">{issue.suggestion}</p>
@@ -1594,12 +1616,13 @@ if len(num_cols) > 0:
                               issue.severity === 'CRITICAL' ? 'bg-red-900/20 text-red-900' :
                               issue.severity === 'HIGH' ? 'bg-red-500/20 text-red-700' : 
                               issue.severity === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-700' : 
+                              issue.severity === 'LOW' ? 'bg-emerald-500/20 text-emerald-700' : 
                               'bg-blue-500/20 text-blue-700'}`}>
                               {issue.severity} PRIORITY
                           </span>
                       </div>
-                      <h3 className="text-xl font-semibold mb-1 text-neutral-900"><RichText content={issue.description} /></h3>
-                      <p className="text-sm text-neutral-600">→ Fix: <span className=" font-medium text-neutral-800"><RichText content={issue.suggestion} /></span></p>
+                      <div className="text-sm font-medium mb-1 text-neutral-900 leading-relaxed whitespace-pre-wrap"><RichText content={issue.description} /></div>
+                      <p className="text-sm text-neutral-600">→ Fix: <span className=" font-medium text-neutral-800 whitespace-pre-wrap"><RichText content={issue.suggestion} /></span></p>
                   </div>
               </div>
 
