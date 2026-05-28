@@ -814,7 +814,7 @@ if len(num_cols) > 0:
                               <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl flex flex-col justify-center items-center text-center">
                                   <p className="text-[10px] uppercase font-bold text-neutral-400 tracking-widest mb-1">Governance</p>
                                   <p className={`font-black uppercase text-sm ${run.status === 'APPROVED' ? 'text-emerald-600' : run.status === 'AWAITING_REVIEW' ? 'text-blue-600' : 'text-red-600'}`}>
-                                      {run.status === 'AWAITING_REVIEW' ? 'UNDER REVIEW' : run.status.replace(/_/g, ' ')}
+                                      {run.status === 'APPROVED' ? 'APPROVED' : run.status === 'AWAITING_REVIEW' ? 'UNDER REVIEW' : 'REJECTED'}
                                   </p>
                               </div>
                               <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl flex flex-col justify-center items-center text-center">
@@ -825,9 +825,9 @@ if len(num_cols) > 0:
                                   <p className="text-[10px] uppercase font-bold text-neutral-400 tracking-widest mb-1">Drift</p>
                                   <p className="font-black uppercase text-sm text-neutral-800">{run.driftSeverity || 'NONE'}</p>
                               </div>
-                              <div className={`p-4 rounded-xl flex flex-col justify-center items-center text-center border ${meta.deployment_ready ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                              <div className={`p-4 rounded-xl flex flex-col justify-center items-center text-center border ${run.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : run.status === 'AWAITING_REVIEW' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
                                   <p className="text-[10px] uppercase font-bold tracking-widest mb-1 opacity-70">Deployment</p>
-                                  <p className="font-black uppercase text-sm">{meta.deployment_ready ? 'READY' : 'BLOCKED'}</p>
+                                  <p className="font-black uppercase text-sm">{run.status === 'APPROVED' ? 'READY' : run.status === 'AWAITING_REVIEW' ? 'REVIEW REQUIRED' : 'BLOCKED'}</p>
                               </div>
                           </div>
 
