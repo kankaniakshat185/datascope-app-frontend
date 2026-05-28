@@ -14,6 +14,8 @@ export default function Home() {
   const [rulesJson, setRulesJson] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [jobProgress, setJobProgress] = useState(0);
+  const [jobStage, setJobStage] = useState("");
   const [isLoginMode, setIsLoginMode] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -118,28 +120,53 @@ export default function Home() {
   const handleUpload = async () => {
     if (!file) return;
     setUploading(true);
+    setJobProgress(10);
+    setJobStage("Uploading dataset securely...");
+    
     const formData = new FormData();
     formData.append("file", file);
     if (rulesJson.trim() !== "") {
         formData.append("rules", rulesJson);
     }
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      // Step 1: Start the Async Governance Job
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-    setUploading(false);
-    if (res.ok) {
-      const data = await res.json();
-      router.push(`/results/${data.datasetId}`);
-    } else {
-      try {
-        const errorData = await res.json();
-        alert(`Upload failed: ${errorData.error || "Unknown error"}`);
-      } catch (e) {
-        alert("Upload failed: Unknown error");
+      if (!res.ok) {
+        throw new Error(await res.text());
       }
+
+      const data = await res.json();
+      const { runId, jobId } = data;
+
+      // Step 2: Poll for completion
+      const pollInterval = setInterval(async () => {
+        const pollRes = await fetch(`/api/jobs/${runId}?fastApiJobId=${jobId}`);
+        if (!pollRes.ok) return;
+
+        const pollData = await pollRes.json();
+        
+        if (pollData.progress) setJobProgress(pollData.progress);
+        if (pollData.stage) setJobStage(pollData.stage);
+
+        if (pollData.status === "COMPLETED") {
+          clearInterval(pollInterval);
+          setUploading(false);
+          router.push(`/results/${pollData.datasetId}`);
+        } else if (pollData.status === "FAILED") {
+          clearInterval(pollInterval);
+          setUploading(false);
+          alert(`Analysis failed: ${pollData.error}`);
+        }
+      }, 1500);
+
+    } catch (e: any) {
+      setUploading(false);
+      alert(`Upload failed: ${e.message}`);
     }
   };
 
@@ -205,9 +232,40 @@ export default function Home() {
             onClick={handleUpload}
             className="h-16 px-12 bg-neutral-900 text-white rounded-[2.5rem] font-bold text-base tracking-wide hover:bg-neutral-800 transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shrink-0 active:scale-95"
           >
-            {uploading ? "Analyzing..." : "Analyze"}
+            {uploading ? (
+              <div className="flex items-center gap-3">
+                 <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+                 {jobProgress}% - {jobStage || "Initializing"}
+              </div>
+            ) : "Initialize Governance Run"}
           </button>
         </div>
+
+        {/* Progress Modal Overlay */}
+        {uploading && (
+           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-white/80 backdrop-blur-sm animate-in fade-in">
+              <div className="bg-white border-2 border-black rounded-[2rem] p-10 max-w-lg w-full shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] text-center space-y-6 relative overflow-hidden">
+                 
+                 <div className="absolute top-0 left-0 w-full h-2 bg-neutral-100">
+                    <div className="h-full bg-blue-500 transition-all duration-500 ease-out" style={{ width: `${jobProgress}%` }}></div>
+                 </div>
+
+                 <h3 className="text-3xl font-black uppercase tracking-tighter">Validating Run</h3>
+                 
+                 <div className="flex justify-center gap-2 mb-4">
+                     <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                     <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                     <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce"></div>
+                 </div>
+
+                 <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl">
+                    <p className="text-sm font-bold text-neutral-600 uppercase tracking-wider">{jobStage || "Initializing job..."}</p>
+                    <p className="text-xs text-neutral-400 mt-2 font-medium">Please do not close this window.</p>
+                 </div>
+              </div>
+           </div>
+        )}
+
 
         <div className="flex flex-col items-center gap-6 mt-6 max-w-xl mx-auto">
             <p className="text-xs text-neutral-500 font-medium uppercase tracking-widest text-center">Secure local processing • Your dataset is not stored anywhere</p>
