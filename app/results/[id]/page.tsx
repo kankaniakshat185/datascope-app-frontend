@@ -899,7 +899,7 @@ if len(num_cols) > 0:
                   const logsByPhase: Record<string, any[]> = {};
                   const phaseOrder = ["VALIDATION PHASE", "ANALYSIS PHASE", "GOVERNANCE PHASE", "UNKNOWN"];
                   if (run.AuditLogs) {
-                      run.AuditLogs.forEach((log) => {
+                      run.AuditLogs.forEach((log: any) => {
                           const phase = log.phase || "UNKNOWN";
                           if (!logsByPhase[phase]) logsByPhase[phase] = [];
                           logsByPhase[phase].push(log);
