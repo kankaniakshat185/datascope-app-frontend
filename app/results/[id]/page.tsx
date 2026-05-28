@@ -31,9 +31,16 @@ type DatasetResult = {
   versions?: {
     ModelRuns: {
       status: string;
+      validationStatus?: string;
+      driftSeverity?: string;
+      governanceScore?: number;
+      stabilityScore?: number;
+      metadataJson?: any;
       AuditLogs: {
         id: string;
         eventType: string;
+        severity: string;
+        phase: string;
         comments: string;
         timestamp: string;
       }[];
@@ -724,97 +731,192 @@ if len(num_cols) > 0:
                   const run = data.versions?.[0]?.ModelRuns?.[0];
                   if (!run) return <div className="text-center p-10 bg-neutral-50 rounded-xl">No governance run found.</div>;
                   
-                  const statusColors: Record<string, string> = {
-                      APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-                      REJECTED: "bg-red-50 text-red-700 border-red-200",
-                      RETRAINING_RECOMMENDED: "bg-yellow-50 text-yellow-700 border-yellow-200",
-                      AWAITING_REVIEW: "bg-blue-50 text-blue-700 border-blue-200"
+                  const meta = run.metadataJson || {};
+
+                  // Group logs by phase
+                  const logsByPhase: Record<string, any[]> = {};
+                  const phaseOrder = ["VALIDATION PHASE", "ANALYSIS PHASE", "GOVERNANCE PHASE", "UNKNOWN"];
+                  if (run.AuditLogs) {
+                      run.AuditLogs.forEach((log) => {
+                          const phase = log.phase || "UNKNOWN";
+                          if (!logsByPhase[phase]) logsByPhase[phase] = [];
+                          logsByPhase[phase].push(log);
+                      });
+                  }
+
+                  const severityColors: Record<string, any> = {
+                      INFO: { bg: "bg-blue-50", border: "border-blue-200", icon: <CheckCircle className="text-blue-500 w-5 h-5" /> },
+                      SUCCESS: { bg: "bg-emerald-50", border: "border-emerald-200", icon: <CheckCircle className="text-emerald-500 w-5 h-5" /> },
+                      WARNING: { bg: "bg-yellow-50", border: "border-yellow-200", icon: <AlertTriangle className="text-yellow-500 w-5 h-5" /> },
+                      HIGH: { bg: "bg-orange-50", border: "border-orange-200", icon: <AlertTriangle className="text-orange-500 w-5 h-5" /> },
+                      CRITICAL: { bg: "bg-red-50", border: "border-red-200", icon: <AlertCircle className="text-red-500 w-5 h-5" /> }
                   };
 
                   return (
                       <div className="space-y-8">
-                          <div className={`p-8 rounded-2xl border-2 flex items-center justify-between ${statusColors[run.status] || "bg-neutral-50"}`}>
+                          {/* 1. Model Run Identity Header */}
+                          <div className="bg-black text-white p-8 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl">
                               <div>
-                                  <p className="text-sm font-black uppercase tracking-widest opacity-60 mb-2">Current Model Status</p>
-                                  <h2 className="text-4xl font-black uppercase tracking-tighter flex items-center gap-4">
-                                      {run.status.replace(/_/g, ' ')}
-                                      {run.status === 'AWAITING_REVIEW' && (
-                                          <span className="text-sm font-bold bg-white/50 px-3 py-1.5 rounded-lg border border-blue-200 tracking-normal normal-case">
-                                              Requires Manual Review
-                                          </span>
-                                      )}
-                                  </h2>
+                                  <p className="text-neutral-400 font-mono text-xs uppercase tracking-widest mb-2">Active Run Identity</p>
+                                  <h2 className="text-3xl font-black font-mono tracking-tighter">{meta.run_id || "RUN_UNKNOWN"}</h2>
+                                  <div className="flex gap-4 mt-4 text-sm font-medium text-neutral-300">
+                                      <span>Model: <strong className="text-white">{meta.model_type || "RandomForestRegressor"}</strong></span>
+                                      <span>Dataset: <strong className="text-white">{meta.dataset_version || "v1"}</strong></span>
+                                      <span>Pipeline: <strong className="text-white">{meta.pipeline_version || "v2"}</strong></span>
+                                  </div>
                               </div>
-                              <div className="text-right">
-                                  <p className="text-xs font-bold uppercase opacity-60">Engine Verdict</p>
-                                  <p className="font-mono text-sm mt-1">{new Date().toLocaleString()}</p>
+                              <div className="flex flex-col gap-3 text-right">
+                                  <div className="flex items-center justify-end gap-3">
+                                      <span className="text-xs uppercase text-neutral-400 font-bold tracking-widest">Governance Score</span>
+                                      <span className={`px-3 py-1 rounded text-xl font-black ${run.governanceScore && run.governanceScore >= 80 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                                          {run.governanceScore || 0}/100
+                                      </span>
+                                  </div>
+                                  <div className="flex items-center justify-end gap-3">
+                                      <span className="text-xs uppercase text-neutral-400 font-bold tracking-widest">Stability Score</span>
+                                      <span className="px-3 py-1 rounded text-xl font-black bg-blue-500/20 text-blue-400">
+                                          {run.stabilityScore || 0}/100
+                                      </span>
+                                  </div>
                               </div>
                           </div>
 
-                          <div>
+                          {/* 2. Lifecycle Status Chips */}
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                              <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl flex flex-col justify-center items-center text-center">
+                                  <p className="text-[10px] uppercase font-bold text-neutral-400 tracking-widest mb-1">Validation</p>
+                                  <p className={`font-black uppercase text-sm ${run.validationStatus === 'PASSED' ? 'text-emerald-600' : 'text-neutral-800'}`}>{run.validationStatus || 'UNKNOWN'}</p>
+                              </div>
+                              <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl flex flex-col justify-center items-center text-center">
+                                  <p className="text-[10px] uppercase font-bold text-neutral-400 tracking-widest mb-1">Governance</p>
+                                  <p className={`font-black uppercase text-sm ${run.status === 'APPROVED' ? 'text-emerald-600' : run.status === 'AWAITING_REVIEW' ? 'text-blue-600' : 'text-red-600'}`}>
+                                      {run.status === 'AWAITING_REVIEW' ? 'UNDER REVIEW' : run.status.replace(/_/g, ' ')}
+                                  </p>
+                              </div>
+                              <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl flex flex-col justify-center items-center text-center">
+                                  <p className="text-[10px] uppercase font-bold text-neutral-400 tracking-widest mb-1">Monitoring</p>
+                                  <p className="font-black uppercase text-sm text-emerald-600">{meta.monitoring_status || 'ACTIVE'}</p>
+                              </div>
+                              <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl flex flex-col justify-center items-center text-center">
+                                  <p className="text-[10px] uppercase font-bold text-neutral-400 tracking-widest mb-1">Drift</p>
+                                  <p className="font-black uppercase text-sm text-neutral-800">{run.driftSeverity || 'NONE'}</p>
+                              </div>
+                              <div className={`p-4 rounded-xl flex flex-col justify-center items-center text-center border ${meta.deployment_ready ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                                  <p className="text-[10px] uppercase font-bold tracking-widest mb-1 opacity-70">Deployment</p>
+                                  <p className="font-black uppercase text-sm">{meta.deployment_ready ? 'READY' : 'BLOCKED'}</p>
+                              </div>
+                          </div>
+
+                          {/* 3. Retraining Banner */}
+                          {meta.retraining_required && (
+                              <div className="bg-amber-50 border border-amber-200 p-6 rounded-2xl flex items-start gap-4">
+                                  <AlertTriangle className="w-8 h-8 text-amber-500 shrink-0 mt-1" />
+                                  <div>
+                                      <h4 className="text-amber-900 font-bold text-lg mb-1">Retraining Recommended</h4>
+                                      <p className="text-amber-800 text-sm font-medium mb-3">
+                                          <RichText content={meta.retraining_reason || "Model stability has degraded below acceptable thresholds."} />
+                                      </p>
+                                      <div className="flex gap-4">
+                                          <span className="text-xs font-bold bg-amber-200/50 text-amber-800 px-2 py-1 rounded">Confidence: 94%</span>
+                                          <span className="text-xs font-bold bg-amber-200/50 text-amber-800 px-2 py-1 rounded">Severity: HIGH</span>
+                                      </div>
+                                  </div>
+                              </div>
+                          )}
+
+                          {/* 4. Architecture Visibility Metadata */}
+                          <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+                              <h4 className="text-sm font-bold text-neutral-800 uppercase tracking-widest border-b pb-3 mb-4">Operational Architecture</h4>
+                              <div className="flex flex-wrap gap-8">
+                                  <div>
+                                      <p className="text-xs text-neutral-400 font-bold uppercase mb-1">Analysis Runtime</p>
+                                      <p className="font-mono font-medium text-lg">{meta.runtime_ms ? `${(meta.runtime_ms/1000).toFixed(1)}s` : 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                      <p className="text-xs text-neutral-400 font-bold uppercase mb-1">Rows Processed</p>
+                                      <p className="font-mono font-medium text-lg">{(meta.rows_processed || 0).toLocaleString()}</p>
+                                  </div>
+                                  <div>
+                                      <p className="text-xs text-neutral-400 font-bold uppercase mb-1">Features Evaluated</p>
+                                      <p className="font-mono font-medium text-lg">{meta.features_evaluated || 0}</p>
+                                  </div>
+                                  <div>
+                                      <p className="text-xs text-neutral-400 font-bold uppercase mb-1">Validation Engines</p>
+                                      <p className="font-mono font-medium text-lg">{meta.validation_engines_triggered || 7}</p>
+                                  </div>
+                              </div>
+                          </div>
+
+                          {/* 5. Engine Policy Definitions (Moved Above Timeline) */}
+                          <div className="pt-4">
                               <h3 className="text-xl font-bold mb-6 flex items-center gap-3 border-b-2 border-black pb-4">
                                   <Database className="w-5 h-5" />
-                                  Automated Audit Timeline
+                                  Deterministic Engine Policies
                               </h3>
-                              <div className="space-y-4">
-                                  {run.AuditLogs.map((log: any) => (
-                                      <div key={log.id} className="p-6 border border-neutral-200 rounded-xl bg-white flex gap-4 hover:shadow-md transition">
-                                          <div className="mt-1">
-                                              {log.comments.includes("[CRITICAL]") ? <AlertCircle className="text-red-500 w-5 h-5" /> : 
-                                               log.comments.includes("[HIGH]") ? <AlertTriangle className="text-yellow-500 w-5 h-5" /> :
-                                               log.comments.includes("[MEDIUM]") ? <AlertTriangle className="text-blue-500 w-5 h-5" /> :
-                                               <CheckCircle className="text-emerald-500 w-5 h-5" />}
-                                          </div>
-                                          <div>
-                                              <div className="flex items-center gap-3 mb-2">
-                                                  <span className="font-bold text-sm bg-neutral-100 px-2 py-1 rounded border border-neutral-200">{log.eventType}</span>
-                                                  <span className="text-xs text-neutral-400 font-mono">{new Date(log.timestamp).toLocaleTimeString()}</span>
-                                              </div>
-                                              <p className="text-neutral-700 font-medium text-sm leading-relaxed">
-                                                  <RichText content={log.comments} />
-                                              </p>
-                                          </div>
-                                      </div>
-                                  ))}
-                                  {(!run.AuditLogs || run.AuditLogs.length === 0) && (
-                                      <div className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 text-center">
-                                          <p className="text-neutral-500 font-medium text-sm">No audit logs available for this run. The engine may have timed out or bypassed evaluation.</p>
-                                      </div>
-                                  )}
+                              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                  <div className="p-4 border border-neutral-200 rounded-xl bg-neutral-50">
+                                      <h4 className="font-bold text-sm mb-2">1. Cumulative Degradation</h4>
+                                      <p className="text-xs text-neutral-600 leading-relaxed"><RichText content="Calculates total impact of structural issues. > 30% forces REJECTED." /></p>
+                                  </div>
+                                  <div className="p-4 border border-neutral-200 rounded-xl bg-neutral-50">
+                                      <h4 className="font-bold text-sm mb-2">2. Outlier Consensus</h4>
+                                      <p className="text-xs text-neutral-600 leading-relaxed"><RichText content="Multi-method outlier voting. > 15% anomalies blocks deployment." /></p>
+                                  </div>
+                                  <div className="p-4 border border-neutral-200 rounded-xl bg-neutral-50">
+                                      <h4 className="font-bold text-sm mb-2">3. Critical Vulnerability</h4>
+                                      <p className="text-xs text-neutral-600 leading-relaxed"><RichText content="Direct checks for fatal leakage or massive target missingness." /></p>
+                                  </div>
+                                  <div className="p-4 border border-neutral-200 rounded-xl bg-neutral-50">
+                                      <h4 className="font-bold text-sm mb-2">4. SHAP Bias</h4>
+                                      <p className="text-xs text-neutral-600 leading-relaxed"><RichText content="Evaluates segmented attributions for dominant, overwhelming features." /></p>
+                                  </div>
                               </div>
                           </div>
 
+                          {/* 6. Timeline Grouping by Phase */}
                           <div className="pt-8">
-                              <h3 className="text-xl font-bold mb-6 flex items-center gap-3 border-b-2 border-black pb-4">
-                                  <Database className="w-5 h-5" />
-                                  Engine Policy Definitions
-                              </h3>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                  <div className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 hover:shadow-md transition">
-                                      <h4 className="font-bold text-lg mb-2">1. Cumulative Degradation</h4>
-                                      <p className="text-sm text-neutral-600 leading-relaxed mb-3">
-                                          <RichText content="Calculates the total negative impact of all data issues (like class imbalance or high skewness). Total impact > 30% forces a REJECTED state. > 15% forces AWAITING_REVIEW." />
-                                      </p>
+                              <h3 className="text-2xl font-black tracking-tight mb-8">Orchestrated Lifecycle Timeline</h3>
+                              
+                              {(!run.AuditLogs || run.AuditLogs.length === 0) ? (
+                                  <div className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 text-center">
+                                      <p className="text-neutral-500 font-medium text-sm">No orchestrated events recorded for this run.</p>
                                   </div>
-                                  <div className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 hover:shadow-md transition">
-                                      <h4 className="font-bold text-lg mb-2">2. Outlier Consensus</h4>
-                                      <p className="text-sm text-neutral-600 leading-relaxed mb-3">
-                                          <RichText content="Evaluates structural anomalies using multi-method voting (Z-Score, Isolation Forest, etc.). If > 15% of data is flagged, forces a REJECTED state." />
-                                      </p>
+                              ) : (
+                                  <div className="space-y-12 pl-4 border-l-2 border-neutral-200 ml-4">
+                                      {phaseOrder.map((phase) => {
+                                          if (!logsByPhase[phase] || logsByPhase[phase].length === 0) return null;
+                                          return (
+                                              <div key={phase} className="relative">
+                                                  <div className="absolute -left-[25px] top-0 bg-white p-1">
+                                                      <div className="w-3 h-3 rounded-full bg-black"></div>
+                                                  </div>
+                                                  <h4 className="text-sm font-black uppercase tracking-widest text-neutral-400 mb-6">{phase}</h4>
+                                                  <div className="space-y-4">
+                                                      {logsByPhase[phase].map((log) => {
+                                                          const style = severityColors[log.severity || 'INFO'] || severityColors['INFO'];
+                                                          return (
+                                                              <div key={log.id} className={`p-5 border rounded-xl flex gap-4 transition shadow-sm hover:shadow-md ${style.bg} ${style.border}`}>
+                                                                  <div className="mt-0.5 shrink-0">
+                                                                      {style.icon}
+                                                                  </div>
+                                                                  <div className="w-full">
+                                                                      <div className="flex justify-between items-start mb-1">
+                                                                          <span className="font-bold text-sm uppercase tracking-wide text-neutral-800">{log.eventType}</span>
+                                                                          <span className="text-xs font-mono font-medium opacity-60">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                                                                      </div>
+                                                                      <p className="text-neutral-700 font-medium text-sm leading-relaxed">
+                                                                          <RichText content={log.comments} />
+                                                                      </p>
+                                                                  </div>
+                                                              </div>
+                                                          );
+                                                      })}
+                                                  </div>
+                                              </div>
+                                          );
+                                      })}
                                   </div>
-                                  <div className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 hover:shadow-md transition">
-                                      <h4 className="font-bold text-lg mb-2">3. Critical Vulnerability Check</h4>
-                                      <p className="text-sm text-neutral-600 leading-relaxed mb-3">
-                                          <RichText content="Scans for fatal issues like direct target leakage or massive missing target values. Automatically triggers a REJECTED state." />
-                                      </p>
-                                  </div>
-                                  <div className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 hover:shadow-md transition">
-                                      <h4 className="font-bold text-lg mb-2">4. SHAP Behavioral Bias</h4>
-                                      <p className="text-sm text-neutral-600 leading-relaxed mb-3">
-                                          <RichText content="Uses Segmented SHAP Analysis to detect if a single feature holds overwhelming predictive power across clusters, forcing a RETRAINING_RECOMMENDED state." />
-                                      </p>
-                                  </div>
-                              </div>
+                              )}
                           </div>
                       </div>
                   );

@@ -126,6 +126,9 @@ model ModelRun {
   
   benchmarkScore      Float?         
   driftSeverity       String?        // LOW, MEDIUM, HIGH
+  governanceScore     Float?
+  stabilityScore      Float?
+  metadataJson        Json?
   
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
@@ -141,6 +144,8 @@ model AuditLog {
   ModelRun    ModelRun @relation(fields: [runId], references: [id], onDelete: Cascade)
   actorId     String   // User ID or 'System'
   eventType   String   // e.g., 'APPROVAL_GRANTED', 'DRIFT_DETECTED'
+  severity    String   @default("INFO")
+  phase       String   @default("UNKNOWN")
   comments    String?
   timestamp   DateTime @default(now())
 

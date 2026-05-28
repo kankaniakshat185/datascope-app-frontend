@@ -112,8 +112,16 @@ export async function GET(
       await prisma.modelRun.update({
         where: { id: runId },
         data: {
-          status: governance.recommended_status,
-          validationStatus: "PASSED"
+          status: governance.recommended_status || "AWAITING_REVIEW",
+          validationStatus: "PASSED",
+          governanceScore: governance.governance_score,
+          stabilityScore: governance.stability_score,
+          metadataJson: {
+            ...governance.metadata,
+            deployment_ready: governance.deployment_ready,
+            retraining_required: governance.retraining_required,
+            retraining_reason: governance.retraining_reason
+          }
         }
       });
 
@@ -124,8 +132,10 @@ export async function GET(
             data: {
               runId: runId,
               actorId: "System",
-              eventType: log.rule,
-              comments: `[${log.severity}] ${log.message}`
+              eventType: log.rule || "UNKNOWN",
+              severity: log.severity || "INFO",
+              phase: log.phase || "UNKNOWN",
+              comments: log.message || ""
             }
           });
         }
