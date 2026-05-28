@@ -335,7 +335,13 @@ export default function Home() {
                                        <li key={i}><strong>{p.column}:</strong> {p.reason}</li>
                                    ))}
                                </ul>
-                               <p className="text-xs text-orange-700 mt-2 font-bold">Consider excluding these in the panel on the right.</p>
+                               <p className="text-xs text-orange-700 mt-2 font-bold mb-3">Consider excluding these in the panel on the right.</p>
+                               <button 
+                                   onClick={() => setExcludedColumns(Array.from(new Set([...excludedColumns, ...profileData.ranked_candidates.find((c: any) => c.column === targetColumn).proxies.map((p: any) => p.column)])))}
+                                   className="px-3 py-1.5 bg-orange-200 hover:bg-orange-300 text-orange-900 text-xs font-bold uppercase rounded transition-colors"
+                               >
+                                   Exclude Proxies Now
+                               </button>
                            </div>
                        )}
 
@@ -367,7 +373,15 @@ export default function Home() {
                        </label>
                        <p className="text-xs text-neutral-500 mb-4 font-medium">Select columns to completely ignore (e.g. IDs, names, direct target proxies).</p>
                        <div className="h-64 overflow-y-auto border border-neutral-200 rounded-xl p-2 bg-neutral-50 space-y-1">
-                           {profileData.columns.filter((c: string) => c !== targetColumn).map((col: string) => (
+                           {[...profileData.columns]
+                               .filter((c: string) => c !== targetColumn)
+                               .sort((a: string, b: string) => {
+                                   const proxies = profileData.ranked_candidates.find((c: any) => c.column === targetColumn)?.proxies || [];
+                                   const aIsProxy = proxies.some((p: any) => p.column === a) ? 1 : 0;
+                                   const bIsProxy = proxies.some((p: any) => p.column === b) ? 1 : 0;
+                                   return bIsProxy - aIsProxy; // Proxies float to top
+                               })
+                               .map((col: string) => (
                                <label key={col} className="flex items-center gap-3 p-2 hover:bg-neutral-100 rounded cursor-pointer">
                                    <input 
                                        type="checkbox" 
