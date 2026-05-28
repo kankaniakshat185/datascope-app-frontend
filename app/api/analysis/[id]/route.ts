@@ -23,6 +23,19 @@ export async function GET(
       },
       include: {
         analysisResults: true,
+        versions: {
+          include: {
+            ModelRuns: {
+              include: {
+                AuditLogs: true
+              },
+              orderBy: { createdAt: "desc" },
+              take: 1
+            }
+          },
+          orderBy: { createdAt: "desc" },
+          take: 1
+        }
       },
     });
 

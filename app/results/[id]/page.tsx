@@ -28,6 +28,17 @@ type DatasetResult = {
   fileName: string;
   uploadedAt: string;
   analysisResults: Issue[];
+  versions?: {
+    ModelRuns: {
+      status: string;
+      AuditLogs: {
+        id: string;
+        eventType: string;
+        comments: string;
+        timestamp: string;
+      }[];
+    }[];
+  }[];
 };
 
 const MetricChart = ({ baseline, after, metric }: { baseline: number; after: number; metric: string }) => {
@@ -328,7 +339,7 @@ export default function ResultsPage() {
   const { data: session } = authClient.useSession();
   const [data, setData] = useState<DatasetResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'issues' | 'eda' | 'remediation' | 'drift' | 'layer1'>('issues');
+  const [activeTab, setActiveTab] = useState<'governance' | 'issues' | 'eda' | 'remediation' | 'drift' | 'layer1'>('governance');
   const [explorerTab, setExplorerTab] = useState<'dictionary' | 'plots'>('dictionary');
   const [edaView, setEdaView] = useState<'numerical' | 'categorical' | 'outlier' | 'correlation'>('numerical');
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
@@ -689,6 +700,71 @@ if len(num_cols) > 0:
             </button>
           </div>
         </div>
+
+        {activeTab === 'governance' && (
+          <div className="p-12 pt-0 animate-in fade-in slide-in-from-bottom-4 duration-500 transition max-w-7xl mx-auto">
+              <div className="text-center mb-10">
+                  <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-6" />
+                  <h3 className="text-3xl font-bold mb-4">ML Governance Engine</h3>
+                  <p className="text-lg text-neutral-600 max-w-2xl mx-auto mb-6 leading-relaxed w-full">
+                      Automated deterministic evaluation of dataset quality, feature leakage, and structural drift to enforce production standards.
+                  </p>
+              </div>
+
+              {(() => {
+                  const run = data.versions?.[0]?.ModelRuns?.[0];
+                  if (!run) return <div className="text-center p-10 bg-neutral-50 rounded-xl">No governance run found.</div>;
+                  
+                  const statusColors: Record<string, string> = {
+                      APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                      REJECTED: "bg-red-50 text-red-700 border-red-200",
+                      RETRAINING_RECOMMENDED: "bg-yellow-50 text-yellow-700 border-yellow-200",
+                      AWAITING_REVIEW: "bg-blue-50 text-blue-700 border-blue-200"
+                  };
+
+                  return (
+                      <div className="space-y-8">
+                          <div className={`p-8 rounded-2xl border-2 flex items-center justify-between ${statusColors[run.status] || "bg-neutral-50"}`}>
+                              <div>
+                                  <p className="text-sm font-black uppercase tracking-widest opacity-60 mb-2">Current Model Status</p>
+                                  <h2 className="text-4xl font-black uppercase tracking-tighter">{run.status.replace(/_/g, ' ')}</h2>
+                              </div>
+                              <div className="text-right">
+                                  <p className="text-xs font-bold uppercase opacity-60">Engine Verdict</p>
+                                  <p className="font-mono text-sm mt-1">{new Date().toLocaleString()}</p>
+                              </div>
+                          </div>
+
+                          <div>
+                              <h3 className="text-xl font-bold mb-6 flex items-center gap-3 border-b-2 border-black pb-4">
+                                  <Database className="w-5 h-5" />
+                                  Automated Audit Timeline
+                              </h3>
+                              <div className="space-y-4">
+                                  {run.AuditLogs.map((log: any) => (
+                                      <div key={log.id} className="p-6 border border-neutral-200 rounded-xl bg-white flex gap-4 hover:shadow-md transition">
+                                          <div className="mt-1">
+                                              {log.comments.includes("[CRITICAL]") ? <AlertCircle className="text-red-500 w-5 h-5" /> : 
+                                               log.comments.includes("[HIGH]") ? <AlertTriangle className="text-yellow-500 w-5 h-5" /> :
+                                               log.comments.includes("[MEDIUM]") ? <AlertTriangle className="text-blue-500 w-5 h-5" /> :
+                                               <CheckCircle className="text-emerald-500 w-5 h-5" />}
+                                          </div>
+                                          <div>
+                                              <div className="flex items-center gap-3 mb-2">
+                                                  <span className="font-bold text-sm bg-neutral-100 px-2 py-1 rounded border border-neutral-200">{log.eventType}</span>
+                                                  <span className="text-xs text-neutral-400 font-mono">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                                              </div>
+                                              <p className="text-neutral-700 font-medium text-sm leading-relaxed">{log.comments}</p>
+                                          </div>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                      </div>
+                  );
+              })()}
+          </div>
+        )}
 
         {activeTab === 'eda' && (
           <div className="p-12 pt-0 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 transition max-w-7xl mx-auto">
