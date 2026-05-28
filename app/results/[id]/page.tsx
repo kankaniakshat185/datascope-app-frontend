@@ -584,48 +584,186 @@ if len(num_cols) > 0:
   return (
     <div className="min-h-screen bg-white text-black font-sans">
       {/* Print-only Report Header */}
-      <div className="hidden print:block p-10 space-y-8 bg-white min-h-screen">
-          <div className="flex justify-between items-start border-b-2 border-black pb-8">
+      {/* Print-only Report Header */}
+      <div className="hidden print:block p-8 space-y-8 bg-white text-black font-sans">
+          <div className="flex justify-between items-end border-b-2 border-black pb-4 mb-8">
               <div>
-                  <h1 className="text-4xl font-black uppercase tracking-tighter mb-2">DataScope Intelligence Report</h1>
-                  <p className="text-neutral-500 font-bold uppercase tracking-widest text-xs italic">Confidential Data Audit • {new Date().toLocaleDateString()}</p>
+                  <h1 className="text-3xl font-black uppercase tracking-tighter mb-1">DataScope Intelligence Report</h1>
+                  <p className="text-neutral-500 font-bold uppercase tracking-widest text-[10px] italic">Confidential Data Audit • {new Date().toLocaleDateString()}</p>
               </div>
               <div className="text-right">
-                  <p className="text-sm font-black uppercase tracking-widest text-neutral-400">Dataset Source</p>
-                  <p className="text-xl font-bold">{data.fileName}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Dataset Source</p>
+                  <p className="text-lg font-bold">{data.fileName}</p>
+              </div>
+          </div>
+          
+          <div className="mb-8 p-4 bg-neutral-100 border border-neutral-300 rounded-lg flex justify-between">
+              <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Governance Status</p>
+                  <p className="text-xl font-bold">{run.status === 'APPROVED' ? 'APPROVED' : run.status === 'AWAITING_REVIEW' ? 'UNDER REVIEW' : 'REJECTED'}</p>
+              </div>
+              <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Deployment</p>
+                  <p className="text-xl font-bold">{run.status === 'APPROVED' ? 'READY' : run.status === 'AWAITING_REVIEW' ? 'REVIEW REQUIRED' : 'BLOCKED'}</p>
+              </div>
+              <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Governance Score</p>
+                  <p className="text-xl font-bold">{run.governanceScore ? `${run.governanceScore}/100` : 'N/A'}</p>
+              </div>
+              <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Stability Score</p>
+                  <p className="text-xl font-bold">{run.stabilityScore ? `${run.stabilityScore}/100` : 'N/A'}</p>
               </div>
           </div>
 
-          <div className="space-y-6">
-              <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
-                  <AlertCircle className="w-6 h-6 text-red-500" />
-                  Detected Data Issues
-              </h2>
-              <div className="grid grid-cols-1 gap-6">
+          <div className="space-y-4">
+              <h2 className="text-xl font-black uppercase tracking-tight border-b border-neutral-200 pb-2">Detected Data Issues</h2>
+              <div className="flex flex-col gap-3">
                   {actualIssues.map((issue: Issue) => (
-                      <div key={issue.id} className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 break-inside-avoid">
-                          <div className="flex justify-between items-start mb-4">
-                              <h3 className="text-lg font-bold">{issue.issueType.replace(/_/g, ' ')}</h3>
-                              <span className={`px-2 py-1 text-[10px] font-black rounded border ${
-                                  issue.severity === 'CRITICAL' ? 'bg-red-900 text-white border-red-900' :
-                                  issue.severity === 'HIGH' ? 'bg-red-50 text-red-600 border-red-100' :
-                                  issue.severity === 'MEDIUM' ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
-                                  issue.severity === 'LOW' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                  'bg-blue-50 text-blue-600 border-blue-100'
+                      <div key={issue.id} className="flex gap-4 p-3 border-b border-neutral-100 break-inside-avoid">
+                          <div className="w-24 shrink-0">
+                              <span className={`px-2 py-1 text-[8px] font-black uppercase rounded ${
+                                  issue.severity === 'CRITICAL' ? 'bg-red-100 text-red-800' :
+                                  issue.severity === 'HIGH' ? 'bg-orange-100 text-orange-800' :
+                                  issue.severity === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                                  issue.severity === 'LOW' ? 'bg-emerald-100 text-emerald-800' :
+                                  'bg-blue-100 text-blue-800'
                               }`}>{issue.severity}</span>
                           </div>
-                          <div className="text-sm text-neutral-600 mb-4 font-medium leading-relaxed whitespace-pre-wrap"><RichText content={issue.description} /></div>
-                          <div className="p-3 bg-white border border-neutral-100 rounded-lg">
-                              <p className="text-[10px] font-black uppercase text-neutral-400 mb-1">Recommended Remediation</p>
-                              <p className="text-xs font-bold text-neutral-800">{issue.suggestion}</p>
+                          <div className="flex-1">
+                              <h3 className="text-sm font-bold mb-1">{issue.issueType.replace(/_/g, ' ')}</h3>
+                              <p className="text-xs text-neutral-600 mb-2 leading-relaxed">
+                                {issue.description.replace(/\*\*/g, '').split('\n')[0].substring(0, 150)}{issue.description.length > 150 ? '...' : ''}
+                              </p>
+                              <p className="text-[10px] font-semibold text-neutral-800"><span className="text-neutral-400">Action:</span> {issue.suggestion}</p>
                           </div>
                       </div>
                   ))}
+                  {actualIssues.length === 0 && (
+                      <div className="p-4 text-sm text-neutral-500 italic">No critical issues detected.</div>
+                  )}
               </div>
           </div>
 
-          <div className="pt-20 text-center border-t border-neutral-100">
-              <p className="text-[10px] font-black text-neutral-300 uppercase tracking-[0.5em]">End of Report • DataScope Engine</p>
+          {dataDictResult?.rawJson && (
+              <div className="space-y-4 pt-8 break-before-page">
+                  <h2 className="text-xl font-black uppercase tracking-tight border-b border-neutral-200 pb-2">Data Dictionary & Schema</h2>
+                  <div className="flex gap-8 mb-4">
+                      <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Total Rows</p>
+                          <p className="text-lg font-bold">{dataDictResult.rawJson.total_rows}</p>
+                      </div>
+                      <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Total Columns</p>
+                          <p className="text-lg font-bold">{dataDictResult.rawJson.total_columns}</p>
+                      </div>
+                  </div>
+                  <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                          <tr className="border-b border-neutral-200 uppercase tracking-widest text-[9px] text-neutral-500">
+                              <th className="py-2">Column Name</th>
+                              <th className="py-2">Data Type</th>
+                              <th className="py-2">Missing %</th>
+                              <th className="py-2">Unique Count</th>
+                              <th className="py-2">Outlier %</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          {dataDictResult.rawJson.columns?.map((col: any, idx: number) => (
+                              <tr key={idx} className="border-b border-neutral-100">
+                                  <td className="py-2 font-bold">{col.name}</td>
+                                  <td className="py-2 text-neutral-600">{col.type}</td>
+                                  <td className="py-2 text-neutral-600">{col.missing_percentage}%</td>
+                                  <td className="py-2 text-neutral-600">{col.unique_count}</td>
+                                  <td className="py-2 text-neutral-600">{col.outlier_percentage}%</td>
+                              </tr>
+                          ))}
+                      </tbody>
+                  </table>
+              </div>
+          )}
+
+          {layer1Data?.feature_importance?.features && (
+              <div className="space-y-4 pt-8 break-before-page">
+                  <h2 className="text-xl font-black uppercase tracking-tight border-b border-neutral-200 pb-2">Feature Impact Analysis</h2>
+                  <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                          <tr className="border-b border-neutral-200 uppercase tracking-widest text-[9px] text-neutral-500">
+                              <th className="py-2">Feature</th>
+                              <th className="py-2">Importance Score</th>
+                              <th className="py-2">Ablation Impact</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          {Object.entries(layer1Data.feature_importance.features)
+                              .sort((a: any, b: any) => b[1].importance_score - a[1].importance_score)
+                              .map(([feat, metrics]: any, idx: number) => (
+                              <tr key={idx} className="border-b border-neutral-100">
+                                  <td className="py-2 font-bold">{feat}</td>
+                                  <td className="py-2 text-neutral-600">{(metrics.importance_score * 100).toFixed(1)}%</td>
+                                  <td className="py-2 text-neutral-600">{(metrics.performance_impact * 100).toFixed(1)}%</td>
+                              </tr>
+                          ))}
+                      </tbody>
+                  </table>
+              </div>
+          )}
+
+          {layer1Data?.outlier_analysis?.summary && (
+              <div className="space-y-4 pt-8 break-before-page">
+                  <h2 className="text-xl font-black uppercase tracking-tight border-b border-neutral-200 pb-2">Consensus Outlier Analysis</h2>
+                  <div className="flex gap-8 mb-4">
+                      <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Total Outliers</p>
+                          <p className="text-lg font-bold">{layer1Data.outlier_analysis.summary.total_outliers}</p>
+                      </div>
+                      <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Percentage</p>
+                          <p className="text-lg font-bold">{(layer1Data.outlier_analysis.summary.percentage_flagged || 0).toFixed(2)}%</p>
+                      </div>
+                  </div>
+                  <div className="text-xs text-neutral-600">
+                      <p className="font-bold mb-2">Algorithm Flags:</p>
+                      <ul className="list-disc pl-4 space-y-1">
+                          {Object.entries(layer1Data.outlier_analysis.summary.method_flags || {}).map(([method, pct]: any) => (
+                              <li key={method}><span className="font-semibold capitalize">{method.replace('_', ' ')}:</span> {pct.toFixed(2)}% flagged</li>
+                          ))}
+                      </ul>
+                  </div>
+              </div>
+          )}
+
+          {shapData && shapData.segments && Object.keys(shapData.segments).length > 0 && (
+              <div className="space-y-4 pt-8 break-before-page">
+                  <h2 className="text-xl font-black uppercase tracking-tight border-b border-neutral-200 pb-2">Segmented SHAP Intelligence</h2>
+                  {Object.entries(shapData.segments).map(([segmentName, details]: any, idx: number) => (
+                      <div key={idx} className="mb-4 p-4 border border-neutral-200 rounded bg-neutral-50">
+                          <h3 className="font-bold text-sm mb-2">{segmentName}</h3>
+                          <table className="w-full text-left text-xs border-collapse">
+                              <thead>
+                                  <tr className="border-b border-neutral-200 uppercase tracking-widest text-[9px] text-neutral-500">
+                                      <th className="py-2">Feature</th>
+                                      <th className="py-2">Impact Direction</th>
+                                      <th className="py-2">Mean SHAP Value</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  {Object.entries(details.key_drivers || {}).slice(0, 5).map(([driverFeat, driverInfo]: any, driverIdx: number) => (
+                                      <tr key={driverIdx} className="border-b border-neutral-100">
+                                          <td className="py-2 font-bold">{driverFeat}</td>
+                                          <td className={`py-2 ${driverInfo.direction === 'POSITIVE' ? 'text-emerald-600' : 'text-red-600'} font-bold`}>{driverInfo.direction}</td>
+                                          <td className="py-2 text-neutral-600">{driverInfo.mean_value.toFixed(4)}</td>
+                                      </tr>
+                                  ))}
+                              </tbody>
+                          </table>
+                      </div>
+                  ))}
+              </div>
+          )}
+
+          <div className="pt-12 text-center">
+              <p className="text-[8px] font-black text-neutral-400 uppercase tracking-[0.3em]">Generated by DataScope Engine</p>
           </div>
       </div>
 
