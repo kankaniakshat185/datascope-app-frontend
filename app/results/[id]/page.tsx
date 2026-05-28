@@ -736,7 +736,14 @@ if len(num_cols) > 0:
                           <div className={`p-8 rounded-2xl border-2 flex items-center justify-between ${statusColors[run.status] || "bg-neutral-50"}`}>
                               <div>
                                   <p className="text-sm font-black uppercase tracking-widest opacity-60 mb-2">Current Model Status</p>
-                                  <h2 className="text-4xl font-black uppercase tracking-tighter">{run.status.replace(/_/g, ' ')}</h2>
+                                  <h2 className="text-4xl font-black uppercase tracking-tighter flex items-center gap-4">
+                                      {run.status.replace(/_/g, ' ')}
+                                      {run.status === 'AWAITING_REVIEW' && (
+                                          <span className="text-sm font-bold bg-white/50 px-3 py-1.5 rounded-lg border border-blue-200 tracking-normal normal-case">
+                                              Requires Manual Review
+                                          </span>
+                                      )}
+                                  </h2>
                               </div>
                               <div className="text-right">
                                   <p className="text-xs font-bold uppercase opacity-60">Engine Verdict</p>
@@ -763,10 +770,50 @@ if len(num_cols) > 0:
                                                   <span className="font-bold text-sm bg-neutral-100 px-2 py-1 rounded border border-neutral-200">{log.eventType}</span>
                                                   <span className="text-xs text-neutral-400 font-mono">{new Date(log.timestamp).toLocaleTimeString()}</span>
                                               </div>
-                                              <p className="text-neutral-700 font-medium text-sm leading-relaxed">{log.comments}</p>
+                                              <p className="text-neutral-700 font-medium text-sm leading-relaxed">
+                                                  <RichText content={log.comments} />
+                                              </p>
                                           </div>
                                       </div>
                                   ))}
+                                  {(!run.AuditLogs || run.AuditLogs.length === 0) && (
+                                      <div className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 text-center">
+                                          <p className="text-neutral-500 font-medium text-sm">No audit logs available for this run. The engine may have timed out or bypassed evaluation.</p>
+                                      </div>
+                                  )}
+                              </div>
+                          </div>
+
+                          <div className="pt-8">
+                              <h3 className="text-xl font-bold mb-6 flex items-center gap-3 border-b-2 border-black pb-4">
+                                  <Database className="w-5 h-5" />
+                                  Engine Policy Definitions
+                              </h3>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <div className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 hover:shadow-md transition">
+                                      <h4 className="font-bold text-lg mb-2">1. Cumulative Degradation</h4>
+                                      <p className="text-sm text-neutral-600 leading-relaxed mb-3">
+                                          <RichText content="Calculates the total negative impact of all data issues (like class imbalance or high skewness). Total impact > 30% forces a REJECTED state. > 15% forces AWAITING_REVIEW." />
+                                      </p>
+                                  </div>
+                                  <div className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 hover:shadow-md transition">
+                                      <h4 className="font-bold text-lg mb-2">2. Outlier Consensus</h4>
+                                      <p className="text-sm text-neutral-600 leading-relaxed mb-3">
+                                          <RichText content="Evaluates structural anomalies using multi-method voting (Z-Score, Isolation Forest, etc.). If > 15% of data is flagged, forces a REJECTED state." />
+                                      </p>
+                                  </div>
+                                  <div className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 hover:shadow-md transition">
+                                      <h4 className="font-bold text-lg mb-2">3. Critical Vulnerability Check</h4>
+                                      <p className="text-sm text-neutral-600 leading-relaxed mb-3">
+                                          <RichText content="Scans for fatal issues like direct target leakage or massive missing target values. Automatically triggers a REJECTED state." />
+                                      </p>
+                                  </div>
+                                  <div className="p-6 border border-neutral-200 rounded-xl bg-neutral-50 hover:shadow-md transition">
+                                      <h4 className="font-bold text-lg mb-2">4. SHAP Behavioral Bias</h4>
+                                      <p className="text-sm text-neutral-600 leading-relaxed mb-3">
+                                          <RichText content="Uses Segmented SHAP Analysis to detect if a single feature holds overwhelming predictive power across clusters, forcing a RETRAINING_RECOMMENDED state." />
+                                      </p>
+                                  </div>
                               </div>
                           </div>
                       </div>
