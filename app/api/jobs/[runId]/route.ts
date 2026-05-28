@@ -36,6 +36,12 @@ export async function GET(
       });
 
       if (!modelRun) throw new Error("ModelRun not found");
+      
+      // Prevent subsequent polling intervals from duplicating data
+      if (modelRun.status !== "PROCESSING") {
+        return NextResponse.json({ status: "COMPLETED", datasetId: modelRun.DatasetVersion.datasetId, progress: 100, stage: "Analysis complete." });
+      }
+
       const datasetId = modelRun.DatasetVersion.datasetId;
 
       const { issues, dictData, edaData, shapData, layer1Data } = jobData.result;
