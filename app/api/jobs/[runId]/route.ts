@@ -8,10 +8,10 @@ export const maxDuration = 60; // Max allowed for hobby plan
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { runId: string } }
+  { params }: { params: Promise<{ runId: string }> }
 ) {
   try {
-    const runId = params.runId;
+    const { runId } = await params;
     const { searchParams } = new URL(req.url);
     const fastApiJobId = searchParams.get("fastApiJobId");
 
