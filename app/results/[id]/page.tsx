@@ -1200,7 +1200,7 @@ if len(num_cols) > 0:
           </div>
         )}
 
-        {activeTab === 'layer1' && layer1Data && (
+        {(activeTab === 'layer1' || isPrinting) && layer1Data && (
           <div className="p-12 pt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="text-center mb-16">
                    <Activity className="w-16 h-16 text-indigo-500 mx-auto mb-6" />
