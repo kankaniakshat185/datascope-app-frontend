@@ -380,6 +380,7 @@ export default function ResultsPage() {
   const [driftRefFile, setDriftRefFile] = useState<File | null>(null);
   const [driftTestFile, setDriftTestFile] = useState<File | null>(null);
   const [showCode, setShowCode] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [pipelineConfig, setPipelineConfig] = useState<any[]>([
     { id: "0", step: "drop_missing", params: { threshold: 0.5 } },
     { id: "1", step: "impute_missing", params: { strategy: "median" } },
@@ -403,6 +404,15 @@ export default function ResultsPage() {
           }
           return newConfig.sort((a, b) => parseInt(a.id) - parseInt(b.id));
       });
+  };
+
+  
+  const handlePrint = () => {
+      setIsPrinting(true);
+      setTimeout(() => {
+          window.print();
+          setTimeout(() => setIsPrinting(false), 100);
+      }, 500);
   };
 
   const generatePythonCode = () => {
@@ -583,192 +593,8 @@ if len(num_cols) > 0:
 
   return (
     <div className="min-h-screen bg-white text-black font-sans">
-      {/* Print-only Report Header */}
-      {/* Print-only Report Header */}
-      <div className="hidden print:block p-8 space-y-8 bg-white text-black font-sans">
-          <div className="flex justify-between items-end border-b-2 border-black pb-4 mb-8">
-              <div>
-                  <h1 className="text-3xl font-black uppercase tracking-tighter mb-1">DataScope Intelligence Report</h1>
-                  <p className="text-neutral-500 font-bold uppercase tracking-widest text-[10px] italic">Confidential Data Audit • {new Date().toLocaleDateString()}</p>
-              </div>
-              <div className="text-right">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Dataset Source</p>
-                  <p className="text-lg font-bold">{data.fileName}</p>
-              </div>
-          </div>
-          
-          <div className="mb-8 p-4 bg-neutral-100 border border-neutral-300 rounded-lg flex justify-between">
-              <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Governance Status</p>
-                  <p className="text-xl font-bold">{run.status === 'APPROVED' ? 'APPROVED' : run.status === 'AWAITING_REVIEW' ? 'UNDER REVIEW' : 'REJECTED'}</p>
-              </div>
-              <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Deployment</p>
-                  <p className="text-xl font-bold">{run.status === 'APPROVED' ? 'READY' : run.status === 'AWAITING_REVIEW' ? 'REVIEW REQUIRED' : 'BLOCKED'}</p>
-              </div>
-              <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Governance Score</p>
-                  <p className="text-xl font-bold">{run.governanceScore ? `${run.governanceScore}/100` : 'N/A'}</p>
-              </div>
-              <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Stability Score</p>
-                  <p className="text-xl font-bold">{run.stabilityScore ? `${run.stabilityScore}/100` : 'N/A'}</p>
-              </div>
-          </div>
-
-          <div className="space-y-4">
-              <h2 className="text-xl font-black uppercase tracking-tight border-b border-neutral-200 pb-2">Detected Data Issues</h2>
-              <div className="flex flex-col gap-3">
-                  {actualIssues.map((issue: Issue) => (
-                      <div key={issue.id} className="flex gap-4 p-3 border-b border-neutral-100 break-inside-avoid">
-                          <div className="w-24 shrink-0">
-                              <span className={`px-2 py-1 text-[8px] font-black uppercase rounded ${
-                                  issue.severity === 'CRITICAL' ? 'bg-red-100 text-red-800' :
-                                  issue.severity === 'HIGH' ? 'bg-orange-100 text-orange-800' :
-                                  issue.severity === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                                  issue.severity === 'LOW' ? 'bg-emerald-100 text-emerald-800' :
-                                  'bg-blue-100 text-blue-800'
-                              }`}>{issue.severity}</span>
-                          </div>
-                          <div className="flex-1">
-                              <h3 className="text-sm font-bold mb-1">{issue.issueType.replace(/_/g, ' ')}</h3>
-                              <p className="text-xs text-neutral-600 mb-2 leading-relaxed">
-                                {issue.description.replace(/\*\*/g, '').split('\n')[0].substring(0, 150)}{issue.description.length > 150 ? '...' : ''}
-                              </p>
-                              <p className="text-[10px] font-semibold text-neutral-800"><span className="text-neutral-400">Action:</span> {issue.suggestion}</p>
-                          </div>
-                      </div>
-                  ))}
-                  {actualIssues.length === 0 && (
-                      <div className="p-4 text-sm text-neutral-500 italic">No critical issues detected.</div>
-                  )}
-              </div>
-          </div>
-
-          {dataDictResult?.rawJson && (
-              <div className="space-y-4 pt-8 break-before-page">
-                  <h2 className="text-xl font-black uppercase tracking-tight border-b border-neutral-200 pb-2">Data Dictionary & Schema</h2>
-                  <div className="flex gap-8 mb-4">
-                      <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Total Rows</p>
-                          <p className="text-lg font-bold">{dataDictResult.rawJson.total_rows}</p>
-                      </div>
-                      <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Total Columns</p>
-                          <p className="text-lg font-bold">{dataDictResult.rawJson.total_columns}</p>
-                      </div>
-                  </div>
-                  <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                          <tr className="border-b border-neutral-200 uppercase tracking-widest text-[9px] text-neutral-500">
-                              <th className="py-2">Column Name</th>
-                              <th className="py-2">Data Type</th>
-                              <th className="py-2">Missing %</th>
-                              <th className="py-2">Unique Count</th>
-                              <th className="py-2">Outlier %</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          {dataDictResult.rawJson.columns?.map((col: any, idx: number) => (
-                              <tr key={idx} className="border-b border-neutral-100">
-                                  <td className="py-2 font-bold">{col.name}</td>
-                                  <td className="py-2 text-neutral-600">{col.type}</td>
-                                  <td className="py-2 text-neutral-600">{col.missing_percentage}%</td>
-                                  <td className="py-2 text-neutral-600">{col.unique_count}</td>
-                                  <td className="py-2 text-neutral-600">{col.outlier_percentage}%</td>
-                              </tr>
-                          ))}
-                      </tbody>
-                  </table>
-              </div>
-          )}
-
-          {layer1Data?.feature_importance?.features && (
-              <div className="space-y-4 pt-8 break-before-page">
-                  <h2 className="text-xl font-black uppercase tracking-tight border-b border-neutral-200 pb-2">Feature Impact Analysis</h2>
-                  <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                          <tr className="border-b border-neutral-200 uppercase tracking-widest text-[9px] text-neutral-500">
-                              <th className="py-2">Feature</th>
-                              <th className="py-2">Importance Score</th>
-                              <th className="py-2">Ablation Impact</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          {Object.entries(layer1Data.feature_importance.features)
-                              .sort((a: any, b: any) => b[1].importance_score - a[1].importance_score)
-                              .map(([feat, metrics]: any, idx: number) => (
-                              <tr key={idx} className="border-b border-neutral-100">
-                                  <td className="py-2 font-bold">{feat}</td>
-                                  <td className="py-2 text-neutral-600">{(metrics.importance_score * 100).toFixed(1)}%</td>
-                                  <td className="py-2 text-neutral-600">{(metrics.performance_impact * 100).toFixed(1)}%</td>
-                              </tr>
-                          ))}
-                      </tbody>
-                  </table>
-              </div>
-          )}
-
-          {layer1Data?.outlier_analysis?.summary && (
-              <div className="space-y-4 pt-8 break-before-page">
-                  <h2 className="text-xl font-black uppercase tracking-tight border-b border-neutral-200 pb-2">Consensus Outlier Analysis</h2>
-                  <div className="flex gap-8 mb-4">
-                      <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Total Outliers</p>
-                          <p className="text-lg font-bold">{layer1Data.outlier_analysis.summary.total_outliers}</p>
-                      </div>
-                      <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Percentage</p>
-                          <p className="text-lg font-bold">{(layer1Data.outlier_analysis.summary.percentage_flagged || 0).toFixed(2)}%</p>
-                      </div>
-                  </div>
-                  <div className="text-xs text-neutral-600">
-                      <p className="font-bold mb-2">Algorithm Flags:</p>
-                      <ul className="list-disc pl-4 space-y-1">
-                          {Object.entries(layer1Data.outlier_analysis.summary.method_flags || {}).map(([method, pct]: any) => (
-                              <li key={method}><span className="font-semibold capitalize">{method.replace('_', ' ')}:</span> {pct.toFixed(2)}% flagged</li>
-                          ))}
-                      </ul>
-                  </div>
-              </div>
-          )}
-
-          {shapData && shapData.segments && Object.keys(shapData.segments).length > 0 && (
-              <div className="space-y-4 pt-8 break-before-page">
-                  <h2 className="text-xl font-black uppercase tracking-tight border-b border-neutral-200 pb-2">Segmented SHAP Intelligence</h2>
-                  {Object.entries(shapData.segments).map(([segmentName, details]: any, idx: number) => (
-                      <div key={idx} className="mb-4 p-4 border border-neutral-200 rounded bg-neutral-50">
-                          <h3 className="font-bold text-sm mb-2">{segmentName}</h3>
-                          <table className="w-full text-left text-xs border-collapse">
-                              <thead>
-                                  <tr className="border-b border-neutral-200 uppercase tracking-widest text-[9px] text-neutral-500">
-                                      <th className="py-2">Feature</th>
-                                      <th className="py-2">Impact Direction</th>
-                                      <th className="py-2">Mean SHAP Value</th>
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                  {Object.entries(details.key_drivers || {}).slice(0, 5).map(([driverFeat, driverInfo]: any, driverIdx: number) => (
-                                      <tr key={driverIdx} className="border-b border-neutral-100">
-                                          <td className="py-2 font-bold">{driverFeat}</td>
-                                          <td className={`py-2 ${driverInfo.direction === 'POSITIVE' ? 'text-emerald-600' : 'text-red-600'} font-bold`}>{driverInfo.direction}</td>
-                                          <td className="py-2 text-neutral-600">{driverInfo.mean_value.toFixed(4)}</td>
-                                      </tr>
-                                  ))}
-                              </tbody>
-                          </table>
-                      </div>
-                  ))}
-              </div>
-          )}
-
-          <div className="pt-12 text-center">
-              <p className="text-[8px] font-black text-neutral-400 uppercase tracking-[0.3em]">Generated by DataScope Engine</p>
-          </div>
-      </div>
-
       {/* Header */}
-      <header className="no-print flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-[100] shadow-sm">
+      <header className={`flex justify-between items-center ${isPrinting ? "hidden" : ""}` px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center cursor-pointer group" onClick={() => router.push("/")}>
           <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter group-hover:text-blue-600 transition-colors">DataScope</h1>
         </div>
@@ -791,7 +617,7 @@ if len(num_cols) > 0:
         </div>
       </header>
 
-      <div className="no-print w-full flex justify-between items-center px-8 pt-4">
+      <div className={`w-full flex justify-between items-center px-8 pt-4 ${isPrinting ? "hidden" : ""}`}>
           <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
               <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.25em]">
@@ -799,7 +625,7 @@ if len(num_cols) > 0:
               </span>
           </div>
           <button 
-              onClick={() => window.print()}
+              onClick={handlePrint}
               className="no-print flex items-center gap-2 px-5 py-2.5 text-black hover:text-blue-600 transition-all active:scale-95 group"
           >
               <FileDown className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
@@ -808,7 +634,7 @@ if len(num_cols) > 0:
       </div>
 
       {/* Main Content */}
-      <main className="no-print max-w-7xl mx-auto p-12 pt-0">
+      <main className={`max-w-7xl mx-auto p-12 pt-0 ${isPrinting ? "p-0 max-w-none" : "no-print"}`}>
         <div className="flex flex-wrap gap-4 justify-center mb-16 text-center">
             <h2 className="text-4xl font-extrabold mb-4 tracking-tight text-neutral-900 w-full">Your dataset determines your model’s performance.</h2>
             <p className="text-lg max-w-3xl mx-auto mb-6 text-neutral-600 leading-relaxed">
@@ -819,7 +645,7 @@ if len(num_cols) > 0:
             <input type="file" ref={fileInputRef} className="hidden" onChange={handleClean} accept=".csv,.xlsx,.xls,.json,.parquet" />
         </div>
 
-        <div className="flex justify-center mb-10">
+        <div className={`flex justify-center mb-10 ${isPrinting ? "hidden" : ""}`}>
           <div className="bg-neutral-200/50 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-neutral-200 overflow-x-auto">
             <button 
               onClick={() => setActiveTab('governance')}
@@ -879,7 +705,7 @@ if len(num_cols) > 0:
           </div>
         </div>
 
-        {activeTab === 'governance' && (
+        {(activeTab === 'governance' || isPrinting) && (
           <div className="p-12 pt-0 animate-in fade-in slide-in-from-bottom-4 duration-500 transition max-w-7xl mx-auto">
               <div className="text-center mb-10">
                   <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-6" />
@@ -1086,7 +912,7 @@ if len(num_cols) > 0:
           </div>
         )}
 
-        {activeTab === 'eda' && (
+        {(activeTab === 'eda' || isPrinting) && (
           <div className="p-12 pt-0 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 transition max-w-7xl mx-auto">
                 <div className="text-center mb-10">
                     <Database className="w-16 h-16 text-blue-500 mx-auto mb-6" />
@@ -1096,7 +922,7 @@ if len(num_cols) > 0:
                     </p>
                 </div>
                 
-                <div className="flex justify-center mb-10">
+                <div className={`flex justify-center mb-10 ${isPrinting ? "hidden" : ""}`}>
                     <div className="bg-neutral-200/50 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-neutral-200">
                         <button
                             onClick={() => setExplorerTab('dictionary')}
@@ -1113,7 +939,7 @@ if len(num_cols) > 0:
                     </div>
                 </div>
 
-                {explorerTab === 'dictionary' && dataDictResult && dataDictResult.rawJson && (
+                {(explorerTab === 'dictionary' || isPrinting) && dataDictResult && dataDictResult.rawJson && (
                     <div className="animate-in fade-in">
              <div className="flex gap-4 mb-8 justify-center">
                 <div className="bg-blue-50 text-blue-800 px-6 py-2.5 rounded-2xl border border-blue-200 shadow-sm font-semibold">
@@ -1172,10 +998,10 @@ if len(num_cols) > 0:
                 )}
 
 
-                {explorerTab === 'plots' && edaData && (
+                {(explorerTab === 'plots' || isPrinting) && edaData && (
                     <div className="animate-in fade-in">
 
-                <div className="flex justify-center mb-10">
+                <div className={`flex justify-center mb-10 ${isPrinting ? "hidden" : ""}`}>
                     <div className="bg-neutral-200/50 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-neutral-200">
                         {['numerical', 'categorical', 'outlier', 'correlation'].map((view) => (
                             <button
@@ -1482,7 +1308,7 @@ if len(num_cols) > 0:
           </div>
         )}
 
-        {activeTab === 'remediation' && (
+        {(activeTab === 'remediation' || isPrinting) && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
              <div className="p-12 pt-0 relative overflow-hidden transition">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/5 rounded-full blur-3xl"></div>
@@ -1568,7 +1394,7 @@ if len(num_cols) > 0:
                         </div>
                     </div>
 
-                    <div className="flex flex-col items-center gap-6 mb-8 max-w-xl mx-auto">
+                    <div className={`flex flex-col items-center gap-6 mb-8 max-w-xl mx-auto ${isPrinting ? "hidden" : ""}`}>
                         <div className="w-full">
                             <button onClick={() => fileInputRef.current?.click()} disabled={cleaning} className={`w-full py-8 border-2 border-dashed rounded-3xl font-bold transition flex flex-col items-center justify-center gap-3 ${cleaning ? 'opacity-50 cursor-not-allowed border-neutral-300 bg-neutral-50 text-neutral-500' : 'border-neutral-300 hover:bg-neutral-50 text-neutral-600 hover:border-neutral-400'}`}>
                                 <FileDown className={`w-8 h-8 mb-1 ${cleaning ? 'text-neutral-400 animate-pulse' : 'text-neutral-500 opacity-70'}`} />
@@ -1599,7 +1425,7 @@ if len(num_cols) > 0:
           </div>
         )}
 
-        {activeTab === 'issues' && (
+        {(activeTab === 'issues' || isPrinting) && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Card */}
             <div className="pt-0 pb-12 mb-12">
@@ -1639,7 +1465,7 @@ if len(num_cols) > 0:
                                 They represent the relative influence of each feature on the model's predictions specifically for this segment of data.
                             </div>
 
-                            <div className="flex justify-center mb-6">
+                            <div className={`flex justify-center mb-6 ${isPrinting ? "hidden" : ""}`}>
                                 <div className="bg-neutral-100 p-1.5 rounded-2xl flex items-center gap-1 border border-neutral-200">
                                     {Object.keys(shapData.clusters).map((clusterName) => {
                                         const isSelected = selectedCluster === clusterName || (!selectedCluster && clusterName === Object.keys(shapData.clusters)[0]);
@@ -1657,7 +1483,7 @@ if len(num_cols) > 0:
                             </div>
                             
                             <div>
-                                {Object.entries(shapData.clusters).filter(([cName]) => selectedCluster === cName || (!selectedCluster && cName === Object.keys(shapData.clusters)[0])).map(([clusterName, clusterInfo]: any) => (
+                                {Object.entries(shapData.clusters).filter(([cName]) => isPrinting || selectedCluster === cName || (!selectedCluster && cName === Object.keys(shapData.clusters)[0])).map(([clusterName, clusterInfo]: any) => (
                                     <div key={clusterName} className="p-8 bg-neutral-50 rounded-2xl border border-neutral-100 shadow-inner max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-300">
                                         <h4 className="font-black text-xl text-neutral-800 mb-6 pb-2 border-b-2 uppercase tracking-tight text-center">{clusterName.replace('_', ' ')} Drivers</h4>
                                         <div className="space-y-5">
@@ -1723,7 +1549,7 @@ if len(num_cols) > 0:
                 )}
             </div>
 
-            <div className="flex justify-center mb-8">
+            <div className={`flex justify-center mb-8 ${isPrinting ? "hidden" : ""}`}>
                 <div className="bg-neutral-100 p-1.5 rounded-2xl flex items-center gap-1 border border-neutral-200 shadow-inner">
                     <button onClick={() => setIssueFilter('ALL')} className={`px-6 py-2 rounded-xl font-bold transition-all text-sm tracking-wide ${issueFilter === 'ALL' ? 'bg-white text-black shadow-sm border border-neutral-200/50' : 'text-neutral-500 hover:text-black hover:bg-white/50'}`}>All Issues</button>
                     <button onClick={() => setIssueFilter('HIGH')} className={`px-6 py-2 rounded-xl font-bold transition-all text-sm tracking-wide flex items-center gap-2 ${issueFilter === 'HIGH' ? 'bg-red-50 text-red-700 shadow-sm border border-red-100' : 'text-neutral-500 hover:text-red-700 hover:bg-red-50/50'}`}><AlertCircle className="w-4 h-4"/> High Priority</button>
@@ -1735,7 +1561,7 @@ if len(num_cols) > 0:
             {/* Individual Issue Cards */}
             <div className="space-y-6">
                 {actualIssues
-                  .filter(issue => issueFilter === 'ALL' || issue.severity === issueFilter)
+                  .filter(issue => issueFilter === 'ALL' || issue.severity === issueFilter || isPrinting)
                   .sort((a, b) => {
                       const order: Record<string, number> = { 'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3 };
                       return (order[a.severity] ?? 4) - (order[b.severity] ?? 4);
@@ -1814,7 +1640,7 @@ if len(num_cols) > 0:
           </div>
         )}
 
-        {activeTab === 'drift' && (
+        {(activeTab === 'drift' || isPrinting) && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="p-12 pt-0">
                 <div className="relative z-10 w-full mx-auto">
@@ -1826,7 +1652,7 @@ if len(num_cols) > 0:
                         </p>
                     </div>
 
-                    <div className="flex flex-col items-center gap-8 mb-12 max-w-2xl mx-auto">
+                    <div className={`flex flex-col items-center gap-8 mb-12 max-w-2xl mx-auto ${isPrinting ? "hidden" : ""}`}>
                         <div className="flex flex-row gap-6 w-full justify-center">
                             <div className="flex-1">
                                 <input type="file" ref={driftRefInput} className="hidden" onChange={(e) => setDriftRefFile(e.target.files?.[0] || null)} accept=".csv,.xlsx,.xls,.json,.parquet" />
