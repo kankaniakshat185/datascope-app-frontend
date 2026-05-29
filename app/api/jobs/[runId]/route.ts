@@ -42,6 +42,12 @@ export async function GET(
         return NextResponse.json({ status: "COMPLETED", datasetId: modelRun.DatasetVersion.datasetId, progress: 100, stage: "Analysis complete." });
       }
 
+      // Lock the run to prevent race conditions during DB insertions
+      await prisma.modelRun.update({
+        where: { id: runId },
+        data: { validationStatus: "PROCESSING" }
+      });
+
       const datasetId = modelRun.DatasetVersion.datasetId;
 
       const { issues, dictData, edaData, shapData, layer1Data } = jobData.result;
