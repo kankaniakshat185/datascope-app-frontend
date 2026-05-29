@@ -594,7 +594,7 @@ if len(num_cols) > 0:
   return (
     <div className="min-h-screen bg-white text-black font-sans">
       {/* Header */}
-      <header className={`flex justify-between items-center ${isPrinting ? "hidden" : ""}` px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-[100] shadow-sm">
+      <header className={`flex justify-between items-center px-8 py-5 border-b-4 border-black bg-blue-100 sticky top-0 z-[100] shadow-sm ${isPrinting ? "hidden" : ""}`}
         <div className="flex items-center cursor-pointer group" onClick={() => router.push("/")}>
           <h1 className="text-3xl font-bold text-black font-archivo uppercase tracking-tighter group-hover:text-blue-600 transition-colors">DataScope</h1>
         </div>
