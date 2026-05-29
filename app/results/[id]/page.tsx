@@ -977,7 +977,9 @@ if len(num_cols) > 0:
                                )}
                             </td>
                             <td className="py-3 px-4">
-                               {col.outlier_percentage > 0 ? (
+                               {col.outlier_percentage === "N/A" ? (
+                                   <span className="text-neutral-500 text-xs font-medium bg-neutral-100 border border-neutral-200 px-2 py-1 rounded-md">N/A (Identifier)</span>
+                               ) : col.outlier_percentage > 0 ? (
                                    <span className="text-amber-600 text-sm font-medium bg-amber-50 px-2 py-1 rounded-md">{col.outlier_percentage}%</span>
                                ) : (
                                    <span className="text-neutral-400 text-sm px-2 py-1">0%</span>
