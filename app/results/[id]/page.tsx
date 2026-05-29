@@ -1237,12 +1237,34 @@ if len(num_cols) > 0:
                                   if (result.method_scores.dbscan === 1) methods.push("DBSCAN");
                                   
                                   return (
-                                      <div key={rowIdx} className="flex justify-between items-center p-4 bg-red-50 rounded-xl border border-red-100 transition hover:shadow-md">
-                                          <div className="font-bold text-red-900 bg-white px-3 py-1 rounded-lg border border-red-200 shadow-sm">Row #{rowIdx}</div>
-                                          <div className="text-right">
-                                              <p className="text-sm font-bold text-red-700">{methods.length}/4 methods flag this point as anomaly</p>
-                                              <p className="text-[10px] uppercase font-bold text-red-400 mt-1 tracking-wider">({methods.join(', ')})</p>
+                                      <div key={rowIdx} className="p-5 bg-red-50 rounded-xl border border-red-100 transition hover:shadow-md mb-4 last:mb-0">
+                                          <div className="flex justify-between items-start mb-4">
+                                              <div className="font-bold text-red-900 bg-white px-3 py-1 rounded-lg border border-red-200 shadow-sm">Row #{rowIdx}</div>
+                                              <div className="text-right">
+                                                  <span className="text-xs uppercase font-bold text-red-400 tracking-wider">Detected By: </span>
+                                                  <span className="text-sm font-bold text-red-700">{result.detectors_triggered || methods.join(', ')}</span>
+                                              </div>
                                           </div>
+                                          
+                                          {result.primary_anomaly_column && result.primary_anomaly_column !== "Unknown" && (
+                                              <div className="grid grid-cols-2 gap-4 mb-3">
+                                                  <div className="bg-white p-3 rounded-lg border border-red-100 shadow-sm">
+                                                      <p className="text-[10px] text-red-400 font-bold uppercase mb-1 tracking-wider">Primary Driver</p>
+                                                      <p className="font-mono text-sm text-red-900 font-semibold">{result.primary_anomaly_column}</p>
+                                                  </div>
+                                                  <div className="bg-white p-3 rounded-lg border border-red-100 shadow-sm">
+                                                      <p className="text-[10px] text-red-400 font-bold uppercase mb-1 tracking-wider">Value</p>
+                                                      <p className="font-mono text-sm text-red-900 font-semibold">{result.anomaly_value}</p>
+                                                  </div>
+                                              </div>
+                                          )}
+                                          
+                                          {result.anomaly_reason && result.anomaly_reason !== "No explanation available" && (
+                                              <div className="bg-white p-3 rounded-lg border border-red-100 shadow-sm">
+                                                  <p className="text-[10px] text-red-400 font-bold uppercase mb-1 tracking-wider">Reason</p>
+                                                  <p className="text-sm text-red-800 font-medium">{result.anomaly_reason}</p>
+                                              </div>
+                                          )}
                                       </div>
                                   )
                               })}
