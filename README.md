@@ -1,4 +1,4 @@
-# DataScope Client
+# DataScope: The Machine Learning Observability platform
 
 ![DataScope Dashboard](hero.png)
 
