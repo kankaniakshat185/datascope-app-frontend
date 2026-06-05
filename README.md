@@ -1,4 +1,4 @@
-# DataScope: The Machine Learning Observability platform
+# DataScope: The Machine Learning Observability Platform
 
 ![DataScope Dashboard](hero.png)
 
